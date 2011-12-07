@@ -20,4 +20,11 @@
 		<nature>com.adobe.flexbuilder.project.actionscriptnature</nature>
 		<nature>com.powerflasher.fdt.core.FlashNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>UILib</name>
+			<type>2</type>
+			<locationURI>UILib</locationURI>
+		</link>
+	</linkedResources>
 </projectDescription>
