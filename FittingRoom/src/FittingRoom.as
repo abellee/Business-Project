@@ -12,8 +12,9 @@
  * 如有任何人未经拥有所有权方授权同意使用或传播，与本人无关，一切后果自负！
  */
 package {
-	import view.FloatPanel;
-	import flash.display.Shape;
+	import view.DockView;
+
+	import flash.events.MouseEvent;
 
 	import delegates.IUIDressControllerDelegate;
 
@@ -27,13 +28,16 @@ package {
 
 	import view.BodyInterface;
 	import view.DressInterface;
+	import view.FloatPanel;
 	import view.ScreenShotInterface;
 
+	import com.greensock.TweenLite;
 	import com.kge.containers.HGroup;
 	import com.kge.core.UIView;
 	import com.kge.delegates.IUIView;
 
 	import flash.display.Bitmap;
+	import flash.display.Shape;
 	import flash.display.Sprite;
 
 	/**
@@ -44,7 +48,7 @@ package {
 		/**
 		 * 换装界面
 		 */
-		private var dressInterface : DressInterface;
+		private var dressInterface : DressInterface ;
 		/**
 		 * 身体调整界面
 		 */
@@ -69,15 +73,16 @@ package {
 		 * 按钮窗口
 		 */
 		private var topButtonGroup : HGroup;
-		private var searchBtn : Button;
-		private var dock : Sprite;
 		private var leftBlackBar : Shape;
 		private var rightBlackBar : Shape;
-		
-		private var clothesPanel:FloatPanel;
-		private var trousersPanel:FloatPanel;
+		private var dockView : DockView;
+		private var miniButtonGroup : HGroup;
+		private var curButton : Button;
+		public static var instance : FittingRoom = null;
 
 		public function FittingRoom() {
+			instance = this;
+
 			init();
 
 			loadBackgroundImage();
@@ -91,6 +96,28 @@ package {
 		}
 
 		private function listButtons() : void {
+			dressInterface = new DressInterface();
+
+			dockView = new DockView();
+			addChild(dockView);
+			dockView.x = 0;
+			dockView.y = stage.stageHeight - dockView.height + 38;
+
+			leftBlackBar = getBlackSideBar();
+			leftBlackBar.scaleX = -1;
+			addChild(leftBlackBar);
+			leftBlackBar.x = leftBlackBar.width / 2 - 10;
+			leftBlackBar.y = (stage.stageHeight - leftBlackBar.height) / 2 - 40;
+
+			rightBlackBar = getBlackSideBar();
+			addChild(rightBlackBar);
+			rightBlackBar.x = stage.stageWidth - rightBlackBar.width / 2 + 10;
+			rightBlackBar.y = (stage.stageHeight - rightBlackBar.height) / 2 - 40;
+
+			addChild(dressInterface);
+			dressInterface.x = leftBlackBar.x;
+			dressInterface.y = 0;
+
 			if (!dressButton) dressButton = ButtonFactory.DressInterfaceButton();
 			if (!bodyButton) bodyButton = ButtonFactory.BodyInterfaceButton();
 			if (!ssButton) ssButton = ButtonFactory.ScreenShotInterfaceButton();
@@ -101,41 +128,60 @@ package {
 			topButtonGroup.addChild(ssButton);
 			addChild(topButtonGroup);
 			topButtonGroup.delegate = this;
+			
+			bodyButton.selected = true;
+			curButton = bodyButton;
 
-			dock = new Sprite();
-			dock.mouseChildren = false;
-			dock.mouseEnabled = false;
-			dock.addChild(new Bitmap(Global.staticAssets.bottomDock()));
-			addChild(dock);
-			dock.x = 0;
-			dock.y = stage.stageHeight - dock.height;
-			
-			leftBlackBar = getBlackSideBar();
-			leftBlackBar.scaleX = -1;
-			addChild(leftBlackBar);
-			leftBlackBar.x = leftBlackBar.width / 2 - 10;
-			leftBlackBar.y = (stage.stageHeight - leftBlackBar.height) / 2 - 40;
-			
-			rightBlackBar = getBlackSideBar();
-			addChild(rightBlackBar);
-			rightBlackBar.x = stage.stageWidth - rightBlackBar.width / 2 + 10;
-			rightBlackBar.y = (stage.stageHeight - rightBlackBar.height) / 2 - 40;
-			
-			if(!clothesPanel) clothesPanel = new FloatPanel(3);
-			addChild(clothesPanel);
-			clothesPanel.x = leftBlackBar.x;
-			clothesPanel.y = leftBlackBar.y + 10;
-			
-			if(!trousersPanel) trousersPanel = new FloatPanel(3);
-			addChild(trousersPanel);
-			trousersPanel.x = clothesPanel.x;
-			trousersPanel.y = clothesPanel.y + clothesPanel.height + 10;
+			dressButton.addEventListener(MouseEvent.CLICK, onButtonClick);
+			bodyButton.addEventListener(MouseEvent.CLICK, onButtonClick);
+			ssButton.addEventListener(MouseEvent.CLICK, onButtonClick);
+
+			var helpButton : Button = ButtonFactory.HelpButton();
+			var turnButton : Button = ButtonFactory.TurnArroundButton();
+			var resumeButton : Button = ButtonFactory.ResumeButton();
+			var zoomOutButton : Button = ButtonFactory.ZoomOutButton();
+			var zoomInButton : Button = ButtonFactory.ZoomInButton();
+			var zoomClothesButton : Button = ButtonFactory.ZoomClothesButton();
+			var zoomTrousersButton : Button = ButtonFactory.ZoomTrousersButton();
+			var zoomShoeButton : Button = ButtonFactory.ZoomShoeButton();
+
+			addChild(helpButton);
+			helpButton.x = 710;
+			helpButton.y = 500;
+			miniButtonGroup = new HGroup();
+			miniButtonGroup.addChild(turnButton);
+			miniButtonGroup.addChild(resumeButton);
+			miniButtonGroup.addChild(zoomOutButton);
+			miniButtonGroup.addChild(zoomInButton);
+			miniButtonGroup.addChild(zoomClothesButton);
+			miniButtonGroup.addChild(zoomTrousersButton);
+			miniButtonGroup.addChild(zoomShoeButton);
+			addChild(miniButtonGroup);
+			miniButtonGroup.x = helpButton.x + helpButton.width + 5;
+			miniButtonGroup.y = helpButton.y + 3;
+		}
+
+		private function onButtonClick(event : MouseEvent) : void {
+			var button : Button = event.currentTarget as Button;
+			if (curButton) {
+				if (curButton == button) {
+					curButton.selected = true;
+					return;
+				} else {
+					curButton.selected = false;
+				}
+			}
+			curButton = button;
+			if (button == dressButton) {
+			} else if (button == bodyButton) {
+			} else if (button == ssButton) {
+			}
 		}
 
 		private function getBlackSideBar() : Shape {
-			var shape:Shape = new Shape();
+			var shape : Shape = new Shape();
 			shape.graphics.beginFill(0x000000, .5);
-			shape.graphics.drawRoundRect(0, 0, 40, 470, 20);
+			shape.graphics.drawRoundRect(0, 0, 40, 490, 20);
 			shape.graphics.endFill();
 			return shape;
 		}

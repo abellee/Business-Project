@@ -1,4 +1,9 @@
 package view {
+	import flash.text.TextFormat;
+	import global.Global;
+
+	import flash.display.Bitmap;
+
 	import factory.ButtonFactory;
 
 	import fl.controls.Button;
@@ -10,45 +15,54 @@ package view {
 	/**
 	 * @author Abel
 	 */
-	public class SearchAndPages extends UIView implements IUIView {
-		private var searchButton : Button;
+	public class SearchAndPages extends UIView {
+		private var searchButton : UIButton;
 		private var flipUpButton : Button;
 		private var flipDownButton : Button;
 		private var pagesList : VGroup;
 		private var pageNumber : int;
 		private var pagesButtons : Vector.<Button> = new Vector.<Button>();
 		private var container : VGroup = new VGroup();
+		private var background : Bitmap;
 
-		public function SearchAndPages(searchable : Boolean = true) {
-			if (searchable)
-				searchButton = ButtonFactory.SearchButton();
+		public function SearchAndPages(dir : String, searchable : Boolean = true) {
+			background = new Bitmap(Global.staticAssets.barSkin());
+			addChild(background);
+			if (dir == "left") {
+				background.scaleX = -1;
+				background.x = background.width;
+			}
+
+			if (searchable) {
+				searchButton = ButtonFactory.SearchButton(dir);
+				addChild(searchButton);
+			}
+			
+			initPagesList(6);
 		}
 
 		public function initPagesList(pages : int) : void {
 			pageNumber = pages;
 			if (!pagesList) pagesList = new VGroup();
-			pagesList.delegate = this;
+			pagesList.gap = 0;
+			pages = pages > 4 ? 4 : pages;
 			for (var i : int = 0; i < pages; i++) {
 				var btn : Button = ButtonFactory.PageButton();
-				btn.label = i + "";
+				btn.label = (i + 1) + "";
+				btn.setStyle("textFormat", new TextFormat("宋体", 12, 0xFFFFFF));
 				pagesButtons.push(btn);
-				pagesList.addChild(pagesList);
+				pagesList.addChild(btn);
 			}
 			addChild(pagesList);
-			if (pages > 4) {
-				flipUpButton = ButtonFactory.PageButton();
-				flipDownButton = ButtonFactory.PageButton();
+			pagesList.y = 76;
+			if (pageNumber > 4) {
+				flipUpButton = ButtonFactory.FlipUpButton();
+				flipDownButton = ButtonFactory.FlipDownButton();
+				addChild(flipUpButton);
+				addChild(flipDownButton);
+				flipUpButton.y = 53;
+				flipDownButton.y = background.height - flipDownButton.height;
 			}
-		}
-
-		public function changingFinished(view : UIView) : void {
-			if (searchButton)
-				container.addChild(searchButton);
-			if (flipUpButton)
-				container.addChild(flipUpButton);
-			container.addChild(view);
-			if(flipDownButton)
-				container.addChild(flipDownButton);
 		}
 	}
 }

@@ -638,7 +638,7 @@ package factory {
 		/**
 		 * 
 		 **/
-		public function guanbi_down() : BitmapData {
+		public function arrowOver() : BitmapData {
 			if (!_arrowOver) {
 				_arrowOver = (new (Resource.ArrowOver)() as Bitmap).bitmapData;
 			}
@@ -738,7 +738,7 @@ package factory {
 		/**
 		 * 
 		 **/
-		public function kuzi_over() : BitmapData {
+		public function inArrowOver() : BitmapData {
 			if (!_inArrowOver) {
 				_inArrowOver = (new (Resource.InArrowOver)() as Bitmap).bitmapData;
 			}
