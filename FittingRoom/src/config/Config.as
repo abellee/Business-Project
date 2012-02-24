@@ -15,6 +15,9 @@ package config {
 		 * 背景图片地址
 		 */
 		public var backgroundURL : String = "";
+		public var baseURL : String = "http://localhost/";
+		public var amfphpURL : String = "http://localhost/fittingRoom/amfphp/Amfphp/";
+		public var defaultSize : Vector.<Number> = Vector.<Number>([50, 30, 44.5, 76.3, 56, 21]);
 
 		/**
 		 * 单例模式，使用getter"instance"取得实例。

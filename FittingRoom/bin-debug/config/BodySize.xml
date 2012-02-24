@@ -1,0 +1,12 @@
+<size>
+<!-- 身高 -->
+<body minValue="0" maxValue="33" />
+<!-- 肩宽 -->
+<shoulder minValue="20" maxValue="40" />
+<!-- 手长 -->
+<hand minValue="30" maxValue="60" />
+<!-- 腰围 -->
+<waist minValue="15" maxValue="56" />
+<!-- 臀围 -->
+<hip minValue="12" maxValue="32" />
+</size>

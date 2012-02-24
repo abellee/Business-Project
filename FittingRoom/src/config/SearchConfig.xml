@@ -1,0 +1,40 @@
+<config>
+<trademarks>
+<trademark name="Amarni" index="A" />
+<trademark name="Alala" index="A" />
+<trademark name="Gucci" index="G" />
+<trademark name="Zara" index="Z" />
+</trademarks>
+<years>
+<year name="2012" />
+<year name="2011" />
+</years>
+<quarters>
+<!-- url编码 -->
+<quarter name="春" />
+<quarter name="夏" />
+<quarter name="秋" />
+<quarter name="冬" />
+</quarters>
+<colors>
+<!-- －1为混色 －2为黑白色 -3为透明 -->
+<color value="-1" />
+<color value="-2" />
+<color value="-3" />
+<color value="0x000000" />
+<color value="0xFF0000" />
+</colors>
+<types>
+<!-- url编码 -->
+<type name="棉衣" />
+<type name="衬衣" />
+<type name="裤子" />
+<type name="内裤" />
+</types>
+<styles>
+<!-- url编码 -->
+<style name="中性" />
+<style name="英伦" />
+<style name="欧美" />
+</styles>
+</config>

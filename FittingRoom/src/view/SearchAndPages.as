@@ -1,16 +1,18 @@
 package view {
-	import flash.text.TextFormat;
-	import global.Global;
-
-	import flash.display.Bitmap;
-
-	import factory.ButtonFactory;
-
-	import fl.controls.Button;
-
 	import com.kge.containers.VGroup;
 	import com.kge.core.UIView;
 	import com.kge.delegates.IUIView;
+	
+	import factory.ButtonFactory;
+	
+	import fl.controls.Button;
+	
+	import flash.display.Bitmap;
+	import flash.events.MouseEvent;
+	import flash.geom.Point;
+	import flash.text.TextFormat;
+	
+	import global.Global;
 
 	/**
 	 * @author Abel
@@ -36,11 +38,17 @@ package view {
 			if (searchable) {
 				searchButton = ButtonFactory.SearchButton(dir);
 				addChild(searchButton);
+				searchButton.addEventListener(MouseEvent.CLICK, onSearchButtonClick);
 			}
 			
 			initPagesList(6);
 		}
-
+		
+		protected function onSearchButtonClick(event:MouseEvent):void
+		{
+			FittingRoom.instance.showSearchPanel(this.parent as FloatPanel);
+		}
+		
 		public function initPagesList(pages : int) : void {
 			pageNumber = pages;
 			if (!pagesList) pagesList = new VGroup();

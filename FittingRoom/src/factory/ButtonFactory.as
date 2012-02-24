@@ -1,20 +1,22 @@
 package factory {
-	import flash.text.TextFormat;
-
-	import utils.Tool;
-
-	import view.UIButton;
-
-	import fl.controls.ButtonLabelPlacement;
+	import controls.Slider;
+	
 	import fl.controls.Button;
-
-	import global.Global;
-
+	import fl.controls.ButtonLabelPlacement;
+	import fl.controls.CheckBox;
+	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.geom.Matrix;
 	import flash.text.TextFieldAutoSize;
+	import flash.text.TextFormat;
+	
+	import global.Global;
+	
+	import utils.Tool;
+	
+	import view.UIButton;
 
 	/**
 	 * @author Abel
@@ -79,19 +81,19 @@ package factory {
 			btn.mouseChildren = false;
 			btn.mouseEnabled = true;
 			var upSkin : Bitmap = new Bitmap(Global.staticAssets.topLeftButtonUp());
-			var upBD : BitmapData = new BitmapData(upSkin.width, upSkin.height);
+			var upBD : BitmapData = new BitmapData(upSkin.width, upSkin.height, true, 0x00);
 			var matrix : Matrix = new Matrix();
 			matrix.translate(-upSkin.width, 0);
 			matrix.scale(-1, 1);
 			upBD.draw(upSkin, matrix, null, null, null, true);
 			upSkin = new Bitmap(upBD);
 
-			var overBD : BitmapData = new BitmapData(upSkin.width, upSkin.height);
+			var overBD : BitmapData = new BitmapData(upSkin.width, upSkin.height, true, 0x00);
 			var overSkin : Bitmap = new Bitmap(Global.staticAssets.topLeftButtonOver());
 			overBD.draw(overSkin, matrix, null, null, null, true);
 			overSkin = new Bitmap(overBD);
 
-			var downBD : BitmapData = new BitmapData(upSkin.width, upSkin.height);
+			var downBD : BitmapData = new BitmapData(upSkin.width, upSkin.height, true, 0x00);
 			var downSkin : Bitmap = new Bitmap(Global.staticAssets.topLeftButtonDown());
 			downBD.draw(downSkin, matrix, null, null, null, true);
 			downSkin = new Bitmap(downBD);
@@ -533,6 +535,131 @@ package factory {
 			btn.setStyle("overSkin", overSkin);
 			btn.setStyle("downSkin", downSkin);
 			btn.setStyle("upSkin", upSkin);
+			btn.width = upSkin.width;
+			btn.height = upSkin.height;
+			btn.label = "";
+			return btn;
+		}
+
+		public static function CMCheckBox() : CheckBox {
+			var checkBox : CheckBox = new CheckBox();
+			checkBox.textField.autoSize = TextFieldAutoSize.LEFT;
+			checkBox.mouseChildren = false;
+			checkBox.mouseEnabled = true;
+			var upIcon : Bitmap = new Bitmap(Global.staticAssets.cmUp());
+			var downIcon : Bitmap = new Bitmap(Global.staticAssets.cmSelected());
+			checkBox.setStyle("selectedOverIcon", downIcon);
+			checkBox.setStyle("upIcon", upIcon);
+			checkBox.setStyle("selectedUpIcon", downIcon);
+			checkBox.setStyle("downIcon", downIcon);
+			checkBox.setStyle("overIcon", upIcon);
+			checkBox.setStyle("selectedDownIcon", downIcon);
+			checkBox.setStyle("focusRectSkin", new Sprite());
+			checkBox.width = upIcon.width;
+			checkBox.height = upIcon.height;
+			checkBox.label = "";
+			return checkBox;
+		}
+
+		public static function InchCheckBox() : CheckBox {
+			var checkBox : CheckBox = new CheckBox();
+			checkBox.textField.autoSize = TextFieldAutoSize.LEFT;
+			checkBox.mouseChildren = false;
+			checkBox.mouseEnabled = true;
+			var upIcon : Bitmap = new Bitmap(Global.staticAssets.inchUp());
+			var downIcon : Bitmap = new Bitmap(Global.staticAssets.inchSelected());
+			checkBox.setStyle("selectedOverIcon", downIcon);
+			checkBox.setStyle("upIcon", upIcon);
+			checkBox.setStyle("selectedUpIcon", downIcon);
+			checkBox.setStyle("downIcon", downIcon);
+			checkBox.setStyle("overIcon", upIcon);
+			checkBox.setStyle("selectedDownIcon", downIcon);
+			checkBox.setStyle("focusRectSkin", new Sprite());
+			checkBox.width = upIcon.width;
+			checkBox.height = upIcon.height;
+			checkBox.label = "";
+			return checkBox;
+		}
+
+		public static function SliderButton() : Button {
+			var btn : Button = new Button();
+			btn.textField.autoSize = TextFieldAutoSize.LEFT;
+			btn.emphasized = false;
+			btn.toggle = false;
+			btn.mouseChildren = false;
+			btn.mouseEnabled = true;
+			var downSkin : Bitmap = new Bitmap(Global.staticAssets.sliderButtonDown());
+			var upSkin : Bitmap = new Bitmap(Global.staticAssets.sliderButtonUp());
+			var overSkin : Bitmap = new Bitmap(Global.staticAssets.sliderButtonOver());
+			btn.setStyle("downSkin", downSkin);
+			btn.setStyle("upSkin", upSkin);
+			btn.setStyle("overSkin", overSkin);
+			btn.setStyle("focusRectSkin", new Sprite());
+			btn.width = upSkin.width;
+			btn.height = upSkin.height;
+			btn.label = "";
+			return btn;
+		}
+		
+		public static function SearchConditionButton(dir:String):Button{
+			var btn:Button= new Button();
+			btn.textField.autoSize = TextFieldAutoSize.LEFT;
+			btn.emphasized = false;
+			btn.toggle = false;
+			btn.mouseChildren = false;
+			btn.mouseEnabled = true;
+			var downSkin:Bitmap = new Bitmap(Global.staticAssets.searchButtonDown());
+			var overSkin:Bitmap = new Bitmap(Global.staticAssets.searchButtonOver());
+			var upSkin:Bitmap = new Bitmap(Global.staticAssets.searchButtonUp());
+			if(dir == "left"){
+				downSkin = new Bitmap(Tool.bitmapDataReverseX(downSkin.bitmapData));
+				overSkin = new Bitmap(Tool.bitmapDataReverseX(overSkin.bitmapData));
+				upSkin = new Bitmap(Tool.bitmapDataReverseX(upSkin.bitmapData));
+			}
+			btn.setStyle("downSkin", downSkin);
+			btn.setStyle("overSkin", overSkin);
+			btn.setStyle("upSkin", upSkin);
+			btn.setStyle("focusRectSkin", new Sprite());
+			btn.width = upSkin.width;
+			btn.height = upSkin.height;
+			btn.label = "";
+			return btn;
+		}
+		
+		public static function SearchPanelCloseButton():Button{
+			var btn:Button= new Button();
+			btn.textField.autoSize = TextFieldAutoSize.LEFT;
+			btn.emphasized = false;
+			btn.toggle = false;
+			btn.mouseChildren = false;
+			btn.mouseEnabled = true;
+			var downSkin:Bitmap = new Bitmap(Global.staticAssets.closeButtonOver());
+			var upSkin:Bitmap = new Bitmap(Global.staticAssets.closeButtonUp());
+			var overSkin:Bitmap = new Bitmap(Global.staticAssets.closeButtonDown());
+			btn.setStyle("downSkin", downSkin);
+			btn.setStyle("upSkin", upSkin);
+			btn.setStyle("overSkin", overSkin);
+			btn.setStyle("focusRectSkin", new Sprite());
+			btn.width = upSkin.width;
+			btn.height = upSkin.height;
+			btn.label = "";
+			return btn;
+		}
+		
+		public static function GreenButton():Button{
+			var btn:Button= new Button();
+			btn.textField.autoSize = TextFieldAutoSize.LEFT;
+			btn.emphasized = false;
+			btn.toggle = false;
+			btn.mouseChildren = false;
+			btn.mouseEnabled = true;
+			var overSkin:Bitmap = new Bitmap(Global.staticAssets.greenButtonOver());
+			var upSkin:Bitmap = new Bitmap(Global.staticAssets.greenButtonUp());
+			var downSkin:Bitmap = new Bitmap(Global.staticAssets.greenButtonDown());
+			btn.setStyle("overSkin", overSkin);
+			btn.setStyle("downSkin", downSkin);
+			btn.setStyle("upSkin", upSkin);
+			btn.setStyle("focusRectSkin", new Sprite());
 			btn.width = upSkin.width;
 			btn.height = upSkin.height;
 			btn.label = "";

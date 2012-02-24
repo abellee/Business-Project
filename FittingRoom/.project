@@ -22,9 +22,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>UILib</name>
+			<name>[source path] src</name>
 			<type>2</type>
-			<locationURI>UILib</locationURI>
+			<location>/Users/Abel/Documents/SVN(Git)/ASLib/UILib/src</location>
 		</link>
 	</linkedResources>
 </projectDescription>

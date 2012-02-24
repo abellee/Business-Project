@@ -30,12 +30,6 @@ package resource {
 		[Embed(source="fittingRoom.swf", symbol="HelpCloseUp")]
 		public static var HelpCloseUp : Class;
 		
-		[Embed(source="fittingRoom.swf", symbol="CheckDown")]
-		public static var CheckDown : Class;
-		
-		[Embed(source="fittingRoom.swf", symbol="CheckOver")]
-		public static var CheckOver : Class;
-		
 		[Embed(source="fittingRoom.swf", symbol="SliderBar")]
 		public static var SliderBar : Class;
 		
@@ -306,5 +300,49 @@ package resource {
 		[Embed(source="fittingRoom.swf", symbol="MiddleButtonDown")]
 		public static var MiddleButtonDown : Class;
 		
+		[Embed(source="fittingRoom.swf", symbol="CmUp")]
+		public static var CmUp : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="CmSelected")]
+		public static var CmSelected : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="InchUp")]
+		public static var InchUp : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="InchSelected")]
+		public static var InchSelected : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="Arm_back")]
+		public static var ArmBack : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="Arm_front")]
+		public static var ArmFront : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="Chest_back")]
+		public static var ChestBack : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="Chest_front")]
+		public static var ChestFront : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="Waist_back")]
+		public static var WaistBack : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="Waist_front")]
+		public static var WaistFront : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="Leg_back")]
+		public static var LegBack : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="Leg_front")]
+		public static var LegFront : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="Face_back")]
+		public static var FaceBack : Class;
+		
+		[Embed(source="fittingRoom.swf", symbol="Face_front")]
+		public static var FaceFront : Class;
+		
+		[Embed(source="loading.swf")]
+		public static var Chrysanthemum : Class;
 	}
 }

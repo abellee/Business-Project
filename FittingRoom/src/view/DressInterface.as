@@ -1,9 +1,11 @@
 package view {
-	import delegates.FloatPanelDelegate;
-
 	import com.greensock.TweenLite;
 	import com.kge.core.UIView;
 	import com.kge.delegates.IUIView;
+	
+	import data.DataParams;
+	
+	import delegates.FloatPanelDelegate;
 
 	/**
 	 * @author Abel
@@ -13,37 +15,36 @@ package view {
 		private var trousersPanel : FloatPanel;
 		private var hairPanel : FloatPanel;
 		private var widgetPanel : FloatPanel;
-		private var clothesPanelX : int;
 		private var clothesPanelX0 : int;
 		private var hairPanelX : int;
 		private var hairPanelX0 : int;
 
 		public function DressInterface() {
 			super();
-			if (!clothesPanel) clothesPanel = new FloatPanel(3, "上装");
+			if (!clothesPanel) clothesPanel = new FloatPanel(3, "上装", DataParams.CLOTHES);
 			clothesPanel.delegate = this;
 			addChild(clothesPanel);
 			clothesPanel.y = 30;
 
-			if (!trousersPanel) trousersPanel = new FloatPanel(3, "下装");
+			if (!trousersPanel) trousersPanel = new FloatPanel(3, "下装", DataParams.TROUSERS);
 			trousersPanel.delegate = this;
-			addChild(trousersPanel);
+			addChildAt(trousersPanel, 0);
 			trousersPanel.x = clothesPanel.x;
 			trousersPanel.y = clothesPanel.y + clothesPanel.height + 10;
 
-			if (!hairPanel) hairPanel = new FloatPanel(3, "套装", "left");
+			if (!hairPanel) hairPanel = new FloatPanel(3, "套装", null, "left");
 			hairPanel.delegate = this;
-			addChild(hairPanel);
-			hairPanel.x = 760;
+			addChildAt(hairPanel, 0);
+			hairPanel.x = 762;
 			hairPanel.y = clothesPanel.y;
 
-			if (!widgetPanel) widgetPanel = new FloatPanel(3, "鞋包", "left");
+			if (!widgetPanel) widgetPanel = new FloatPanel(3, "鞋包", null, "left");
 			widgetPanel.delegate = this;
-			addChild(widgetPanel);
+			addChildAt(widgetPanel, 0);
 			widgetPanel.x = hairPanel.x;
 			widgetPanel.y = hairPanel.y + hairPanel.height + 10;
 
-			clothesPanelX0 = -clothesPanel.width + 52;
+			clothesPanelX0 = -clothesPanel.width + 55;
 			hairPanelX0 = hairPanelX + hairPanel.width - 30;
 		}
 
@@ -51,6 +52,8 @@ package view {
 		}
 
 		public function indentFloatPanel(panel : FloatPanel) : void {
+			FittingRoom.instance.removeSearchPanel();
+			FittingRoom.instance.closeDetailPanel();
 			var targetPosX : int;
 			if (panel == clothesPanel || panel == trousersPanel) {
 				targetPosX = clothesPanelX0;
@@ -63,7 +66,7 @@ package view {
 			} else {
 				targetPosX = 980;
 				if (panel.isIndent) {
-					targetPosX = 760;
+					targetPosX = 762;
 					panel.isIndent = false;
 				} else {
 					panel.isIndent = true;

@@ -47,14 +47,6 @@ package factory {
 		/**
 		 * 
 		 **/
-		private var _checkDown : BitmapData;
-		/**
-		 * 
-		 **/
-		private var _checkOver : BitmapData;
-		/**
-		 * 
-		 **/
 		private var _sliderBar : BitmapData;
 		/**
 		 * 
@@ -394,6 +386,10 @@ package factory {
 		private var _middleButtonUp : BitmapData;
 		private var _middleButtonOver : BitmapData;
 		private var _middleButtonDown : BitmapData;
+		private var _cmUp : BitmapData;
+		private var _cmSelected : BitmapData;
+		private var _inchUp : BitmapData;
+		private var _inchSelected : BitmapData;
 
 		/**
 		 * 
@@ -488,21 +484,41 @@ package factory {
 		/**
 		 * 
 		 **/
-		public function checkDown() : BitmapData {
-			if (!_checkDown) {
-				_checkDown = (new (Resource.CheckDown)() as Bitmap).bitmapData;
+		public function cmUp() : BitmapData {
+			if (!_cmUp) {
+				_cmUp = (new (Resource.CmUp)() as Bitmap).bitmapData;
 			}
-			return _checkDown;
+			return _cmUp;
 		}
 
 		/**
 		 * 
 		 **/
-		public function checkOver() : BitmapData {
-			if (!_checkOver) {
-				_checkOver = (new (Resource.CheckOver)() as Bitmap).bitmapData;
+		public function cmSelected() : BitmapData {
+			if (!_cmSelected) {
+				_cmSelected = (new (Resource.CmSelected)() as Bitmap).bitmapData;
 			}
-			return _checkOver;
+			return _cmSelected;
+		}
+
+		/**
+		 * 
+		 */
+		public function inchUp() : BitmapData {
+			if (!_inchUp) {
+				_inchUp = (new (Resource.InchUp)() as Bitmap).bitmapData;
+			}
+			return _inchUp;
+		}
+
+		/**
+		 * 
+		 */
+		public function inchSelected() : BitmapData {
+			if (!_inchSelected) {
+				_inchSelected = (new (Resource.InchSelected)() as Bitmap).bitmapData;
+			}
+			return _inchSelected;
 		}
 
 		/**

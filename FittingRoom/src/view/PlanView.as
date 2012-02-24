@@ -28,12 +28,12 @@ package view {
 		private var planTab3 : Button;
 		private var tabGroup : HGroup;
 		private var cellGroup : HGroup;
-		private var cells : Vector.<UIView> = new Vector.<UIView>();
+		private var cells : Vector.<PlanItemView> = new Vector.<PlanItemView>();
 		private var curTab : Button;
 
 		public function PlanView() {
 			super();
-			
+
 			tabGroup = new HGroup();
 			for (var j : int = 0; j < 4; j++) {
 				this["planTab" + j] = ButtonFactory.PlanTabButton();
@@ -71,8 +71,7 @@ package view {
 			cellGroup = new HGroup();
 			cellGroup.gap = 13;
 			for (var i : int = 0; i < 6; i++) {
-				var cell : UIView = new UIView();
-				cell.addChild(ButtonFactory.Item());
+				var cell : PlanItemView = new PlanItemView();
 				cells.push(cell);
 				cellGroup.addChild(cell);
 			}
