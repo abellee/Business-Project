@@ -1,0 +1,17 @@
+{
+  "name": "百斯特财务系统",
+  "main": "index.html",
+  "version": "0.1",
+  "window": {
+    "title": "百斯特财务系统",
+    "icon": "img/icon.png",
+    "toolbar": false,
+    "frame": false,
+    "transparent": true,
+    "fullscreen": false,
+    "show": false
+  },
+  "webkit": {
+    "plugin": true
+  }
+}
