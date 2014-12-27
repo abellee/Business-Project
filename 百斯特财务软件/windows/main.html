@@ -1,0 +1,453 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>百斯特财务系统</title>
+</head>
+<link href="../css/bootstrap.css" media="all" rel="stylesheet"/>
+<link href="../css/bootstrap-theme.css" media="all" rel="stylesheet"/>
+<link href="../css/bootstrap-table.css" media="all" rel="stylesheet"/>
+<link href="../css/bootstrap-switch.css" media="all" rel="stylesheet"/>
+<link href="../css/select2.css" media="all" rel="stylesheet"/>
+<link href="../css/ladda-themeless.min.css" media="all" rel="stylesheet"/>
+<link href="../css/sco/scojs.css" media="all" rel="stylesheet"/>
+<link href="../css/sco/sco.message.css" media="all" rel="stylesheet"/>
+<link href="../css/app.css" media="all" rel="stylesheet"/>
+
+<body>
+	<nav class="navbar navbar-default navbar-static-top" role="navigation">
+	  <div class="container-fluid">
+		<div class="navbar-header">
+			<a class="navbar-brand" href="#">
+				<img alt="Brand" src="../img/logo.png" height="20">
+			</a>
+		</div>
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		  <ul class="nav navbar-nav">
+		    <li class="dropdown">
+		      <a href="#" class="dropdown-toggle" data-toggle="dropdown">菜单<span class="caret"></span></a>
+		      <ul class="dropdown-menu" role="menu">
+		        <li><a href="#" id="createTable" data-toggle="modal" data-target="#createTableModal">创建报表</a></li>
+		        <li class="divider"></li>
+		        <li><a href="#" id="exitBtn">退出</a></li>
+		      </ul>
+		    </li>
+		    <li class="dropdown">
+		      <a href="#" class="dropdown-toggle" data-toggle="dropdown">设置 <span class="caret"></span></a>
+		      <ul class="dropdown-menu" role="menu">
+		      	<li><a href="#" id="addKeyTemplate" data-toggle="modal" data-target="#keysModal">所有字段</a></li>
+		      	<li><a href="#" id="allTableTemplate" data-toggle="modal" data-target="#tablesModal">查看报表</a></li>
+		      	<li><a href="#" id="addTableTemplate" data-toggle="modal" data-target="#addTableModal">添加报表</a></li>
+		        <li><a href="#" id="addUser" data-toggle="modal" data-target="#usersModal">所有财务人员</a></li>
+		        <li class="divider"></li>
+		        <li><a href="#" id="changePassword" data-toggle="modal" data-target="#changePasswordModal">修改密码</a></li>
+		      </ul>
+		    </li>
+		  </ul>
+		</div>
+	  </div>
+	</nav>
+
+	<div class="panel panel-default">
+		<div class="panel-heading clearfix" id="dragZone">
+			<h2 class="panel-title system-font pull-left">
+				所有报表
+			</h2>
+		</div>
+	  <div class="panel-body">
+	  		<table id="historyTable">
+			    <thead>
+			        <tr>
+			        	<th data-field="state" data-checkbox="true"></th>
+			            <th data-field="id">Item ID</th>
+			            <th data-field="name">Item Name</th>
+			            <th data-field="price">Item Price</th>
+			        </tr>
+			    </thead>
+			</table>
+	  </div>
+	</div>
+
+	<div class="modal fade" id="keysModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="myModalLabel">所有字段</h4>
+			</div>
+			<div class="modal-body">
+				<table id="keysTable">
+				    <thead>
+				        <tr>
+				        	<th data-field="state" data-checkbox="true"></th>
+				            <th data-field="id">Item ID</th>
+				            <th data-field="name">Item Name</th>
+				            <th data-field="price">Item Price</th>
+				        </tr>
+				    </thead>
+				</table>
+				<div class="panel panel-default">
+					<div class="panel-heading clearfix" id="dragZone">
+						<h2 class="panel-title system-font pull-left">
+							添加/修改字段
+						</h2>
+					</div>
+				  <div class="panel-body">
+				    <div role="form">
+				    	<div class="form-group form-group-lg">
+							<div class="input-group">
+							  <span class="input-group-addon">字段名称</span>
+							  <input type="text" class="form-control" placeholder="请输入字段名称" id="keyTemplateName">
+							</div>
+						</div>
+						<div class="form-group form-group-lg">
+							<div class="input-group">
+							  <span class="input-group-addon">字段备注</span>
+							  <input type="text" class="form-control" placeholder="请输入字段备注" id="keyTemplateRemark">
+							</div>
+						</div>
+						<div class="form-group form-group-lg">
+							<button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="submitBtn" data-style="expand-right"><span class="ladda-label">添加报表</span></button>
+						</div>
+				    </div>
+				  </div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-danger" id="resetBtn">重 置</button>
+				<button type="button" class="btn btn-default" data-dismiss="modal">关 闭</button>
+			</div>
+	    </div>
+	  </div>
+	</div>
+
+	<div class="modal fade" id="usersModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="myModalLabel">所有财务人员</h4>
+			</div>
+			<div class="modal-body">
+				<table id="usersTable">
+				    <thead>
+				        <tr>
+				        	<th data-field="state" data-checkbox="true"></th>
+				            <th data-field="id">Item ID</th>
+				            <th data-field="name">Item Name</th>
+				            <th data-field="price">Item Price</th>
+				        </tr>
+				    </thead>
+				</table>
+				<div class="panel panel-default">
+					<div class="panel-heading clearfix" id="dragZone">
+						<h2 class="panel-title system-font pull-left">
+							添加财务人员
+						</h2>
+					</div>
+				  <div class="panel-body">
+				    <div role="form">
+				    	<div class="form-group form-group-lg">
+							<div class="input-group">
+							  <span class="input-group-addon">帐号</span>
+							  <input type="text" class="form-control" placeholder="请输入帐号">
+							</div>
+						</div>
+						<div class="form-group form-group-lg">
+							<div class="input-group">
+							  <span class="input-group-addon">密码</span>
+							  <input type="password" class="form-control" placeholder="请输入密码">
+							</div>
+						</div>
+						<div class="form-group form-group-lg">
+							<div class="input-group">
+							  <span class="input-group-addon">姓名</span>
+							  <input type="text" class="form-control" placeholder="请输入真实姓名">
+							</div>
+						</div>
+						<div class="form-group form-group-lg">
+							<button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="userAddBtn" data-style="expand-right"><span class="ladda-label">添加财务</span></button>
+						</div>
+				    </div>
+				  </div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">关 闭</button>
+			</div>
+	    </div>
+	  </div>
+	</div>
+
+	<div class="modal fade" id="tablesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="myModalLabel">查看报表</h4>
+			</div>
+			<div class="modal-body">
+				<table id="tablesTable">
+				    <thead>
+				        <tr>
+				        	<th data-field="state" data-checkbox="true"></th>
+				            <th data-field="id">Item ID</th>
+				            <th data-field="name">Item Name</th>
+				            <th data-field="price">Item Price</th>
+				        </tr>
+				    </thead>
+				</table>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">关 闭</button>
+			</div>
+	    </div>
+	  </div>
+	</div>
+
+	<div class="modal fade" id="addTableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="myModalLabel">添加报表</h4>
+			</div>
+			<div class="modal-body">
+				<div role="form">
+			    	<div class="form-group form-group-lg">
+						<div class="input-group">
+						  <span class="input-group-addon">报表名称</span>
+						  <input type="text" class="form-control" placeholder="请输入报表名称">
+						  <span class="input-group-btn">
+					        <button class="btn btn-default btn-lg" type="button" data-toggle="modal" data-target="#addKeyModal">添加报表字段</button>
+					      </span>
+						</div>
+					</div>
+					<div class="form-group form-group-lg">
+						<div class="input-group">
+						  <span class="input-group-addon">可见范围</span>
+						  <div class="btn-group">
+							  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+							    所有财务 <span class="caret"></span>
+							  </button>
+							  <ul class="dropdown-menu" role="menu">
+							    <li><a href="#">所有财务</a></li>
+							    <li><a href="#">指定财务</a></li>
+							  </ul>
+							</div>
+						</div>
+					</div>
+					<div class="form-group form-group-lg">
+						<input type="hidden" id="userIds" value="" style="width:100%;" />
+					</div>
+					<div class="form-group form-group-lg">
+						<div class="input-group">
+						  	<span class="input-group-addon">生成类型</span>
+						  	<div class="btn-group">
+							  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+							    无 <span class="caret"></span>
+							  </button>
+							  <ul class="dropdown-menu" role="menu">
+							    <li><a href="#">无</a></li>
+							    <li><a href="#">每天</a></li>
+							    <li><a href="#">月初</a></li>
+							    <li><a href="#">月底</a></li>
+							  </ul>
+							</div>
+						</div>
+					</div>
+					<div class="form-group form-group-lg">
+						<div class="input-group">
+						  <span class="input-group-addon">天数（天）</span>
+						  <input type="text" class="form-control" placeholder="请输入天数">
+						</div>
+					</div>
+					<div class="form-group form-group-lg">
+						<div class="input-group">
+							<span class="input-group-addon">是否可用</span>
+							<div class="btn-group">
+							  	<input type="checkbox" checked id="isDisabled"/>
+							</div>
+						</div>
+					</div>
+					<div class="form-group form-group-lg">
+						<button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="userAddBtn" data-style="expand-right"><span class="ladda-label">添加报表</span></button>
+					</div>
+			    </div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">关 闭</button>
+			</div>
+	    </div>
+	  </div>
+	</div>
+
+	<div class="modal fade" id="addKeyModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="myModalLabel">添加报表字段</h4>
+			</div>
+			<div class="modal-body">
+				<table id="addKeyTable">
+				    <thead>
+				        <tr>
+				        	<th data-field="state" data-checkbox="true"></th>
+				            <th>字段名称</th>
+				            <th>值类型</th>
+				            <th>数据源表</th>
+				            <th>数据源字段</th>
+				            <th>备注</th>
+				        </tr>
+				    </thead>
+				</table>
+				<div class="panel panel-default">
+				  <div class="panel-body">
+				  	<div role="form">
+				    	<div class="form-group form-group-lg">
+							<div class="input-group">
+							  <span class="input-group-addon">选择字段</span>
+							  <select id="selectKey"></select>
+							</div>
+						</div>
+						<div class="form-group form-group-lg">
+							<div class="input-group">
+							  <span class="input-group-addon">选择值类型</span>
+							  <select id="selectValueType">
+							  	<option value="0">数字</option>
+							  	<option value="1">字符</option>
+							  </select>
+							</div>
+						</div>
+						<div class="form-group form-group-lg">
+							<div class="input-group">
+							  <span class="input-group-addon">选择数据源表</span>
+							  <select id="selectSourceTable"></select>
+							</div>
+						</div>
+						<div class="form-group form-group-lg">
+							<div class="input-group">
+							  <span class="input-group-addon">选择数据源字段</span>
+							  <select id="selectSourceKey"></select>
+							</div>
+						</div>
+						<div class="form-group form-group-lg">
+							<div class="input-group">
+							  <span class="input-group-addon">备注</span>
+							  <input type="text" class="form-control" placeholder="可选">
+							</div>
+						</div>
+						<div class="form-group form-group-lg">
+							<button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="keyAddBtn" data-style="expand-right"><span class="ladda-label">添加字段</span></button>
+						</div>
+				    </div>
+				  </div>
+			  </div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">确 定</button>
+			</div>
+	    </div>
+	  </div>
+	</div>
+
+	<div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="myModalLabel">修改密码</h4>
+			</div>
+			<div class="modal-body">
+				<div role="form">
+			    	<div class="form-group form-group-lg">
+						<div class="input-group">
+						  <span class="input-group-addon">原密码</span>
+						  <input type="password" class="form-control" placeholder="请输入原密码">
+						</div>
+					</div>
+					<div class="form-group form-group-lg">
+						<div class="input-group">
+						  <span class="input-group-addon">新密码</span>
+						  <input type="password" class="form-control" placeholder="请输入新密码">
+						</div>
+					</div>
+			    </div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">确 定</button>
+			</div>
+	    </div>
+	  </div>
+	</div>
+
+	<div class="modal fade" id="createTableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="myModalLabel">创建报表</h4>
+			</div>
+			<div class="modal-body">
+				<div class="form-group form-group-lg">
+					<div class="input-group">
+					  <span class="input-group-addon">选择报表:</span>
+					  <select id="createTableSelect"></select>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">创 建</button>
+			</div>
+	    </div>
+	  </div>
+	</div>
+
+	<div class="modal fade" id="editTableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="myModalLabel">查看/编辑报表</h4>
+			</div>
+			<div class="modal-body">
+				<table id="editTable">
+				    <thead>
+				        <tr>
+				        	<th data-field="state" data-checkbox="true"></th>
+				            <th data-field="id">Item ID</th>
+				            <th data-field="name">Item Name</th>
+				            <th data-field="price">Item Price</th>
+				        </tr>
+				    </thead>
+				</table>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">关 闭</button>
+			</div>
+	    </div>
+	  </div>
+	</div>
+</body>
+
+<script type="text/javascript" src="../js/jquery-2.1.3.min.js"></script>
+<script type="text/javascript" src="../js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="../js/bootstrap.js"></script>
+<script type="text/javascript" src="../js/bootstrap-table.js"></script>
+<script type="text/javascript" src="../js/bootstrap-switch.js"></script>
+<script type="text/javascript" src="../js/bootbox.min.js"></script>
+<script type="text/javascript" src="../js/select2.min.js"></script>
+<script type="text/javascript" src="../js/template.js"></script>
+
+<script type="text/javascript" src="../js/spin.min.js"></script>
+<script type="text/javascript" src="../js/ladda.min.js"></script>
+
+<script type="text/javascript" src="../js/sco/sco.modal.js"></script>
+<script type="text/javascript" src="../js/sco/sco.confirm.js"></script>
+<script type="text/javascript" src="../js/sco/sco.message.js"></script>
+<script type="text/javascript" src="../js/sco/sco.panes.js"></script>
+
+<script type="text/javascript" src="../js/main.js"></script>
+
+</html>
