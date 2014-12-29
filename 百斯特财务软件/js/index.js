@@ -2,6 +2,9 @@ var gui = require("nw.gui");
 var win = gui.Window.get();
 var loginWindow;
 var mainWindow;
+var tray;
+
+var isLogout = false;
 
 $(document).ready(function() {
     initTray();
@@ -13,11 +16,20 @@ function quitApp() {
 }
 
 function doLogout() {
+    if(mainWindow){
+        mainWindow.removeAllListeners();
+        mainWindow.close();
+        mainWindow = null;
+        localStorage.removeItem("auto");
+        localStorage.removeItem("user");
 
+        isLogout = true;
+        openLoginWindow();
+    }
 }
 
 function initTray() {
-    var tray = new gui.Tray({
+    tray = new gui.Tray({
         title: gui.App.manifest.name,
         icon: "img/tray.png"
     });
@@ -42,6 +54,14 @@ function initTray() {
     });
 }
 
+function loginSuccess(){
+    loginWindow.removeAllListeners();
+    loginWindow.close();
+    loginWindow = null;
+
+    openMainWindow();
+}
+
 function openLoginWindow() {
     loginWindow = gui.Window.open('windows/login.html', {
         "position": 'center',
@@ -61,6 +81,7 @@ function openLoginWindow() {
 function initLoginWindow() {
     loginWindow.setTransparent(true);
     loginWindow.show();
+    loginWindow.focus();
     loginWindow.window.baseWindow = window;
 }
 
