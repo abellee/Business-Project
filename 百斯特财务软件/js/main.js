@@ -12,17 +12,26 @@ var canClear = false;
 var keys;
 var tempTags;
 
+var editingUser;
+var editingTable;
+var tempId;
+
+var currentUser = JSON.parse(localStorage.user);
+
 win.showDevTools("", false);
 
 $(document).ready(init);
 
 function init() {
     $("#exitBtn").on("click", exitApp);
+    $("#logoutBtn").on("click", doLogout);
 
     $(window).on("resize", onWindowResize);
 
     $("#keysModal").on("show.bs.modal", onKeysModalShow);
     $("#usersModal").on("show.bs.modal", onUsersModalShow);
+    $("#changePasswordModal").on("show.bs.modal", onPasswordModalShow);
+    $("#changePasswordModal").on("hide.bs.modal", onPasswordModalHide);
 
     $("#addTableModal").on("show.bs.modal", onAddTableModalShow);
     $("#addKeyModal").on("show.bs.modal", onAddKeyModalShow);
@@ -38,6 +47,35 @@ function init() {
     $("#editModal").on("hide.bs.modal", onModalHide);
     $("#addTableModal").on("hide.bs.modal", onModalHide);
 
+    $("#editTableModal").on("show.bs.modal", onEditTableModalShow);
+    $("#editTableModal").on("hide.bs.modal", onEditTableModalHide);
+
+    window.historyTableControllEvent = {
+        "click .edit": function(e, value, row, index) {
+            editingTable = row;
+            $("#editTableModal").modal("show");
+        },
+        "click .remove": function(e, value, row, index) {
+            tempId = row.id;
+            showConfirm("删除报表将可能影响将其作为数据源的报表，是否确定删除该报表？", function() {
+                var path = gui.App.manifest.server + gui.App.manifest.app + "/api/delete_table";
+                $.post(path, {
+                    tid: tempId
+                }, function(data) {
+                    if (data.success) {
+                        if (data.deleted) {
+                            $.scojs_message('删除成功！', $.scojs_message.TYPE_OK);
+                            $('#historyTable').bootstrapTable("refresh", {silent: true});
+                        } else {
+                            $.scojs_message('删除失败！', $.scojs_message.TYPE_ERROR);
+                        }
+                    } else {
+                        $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+                    }
+                });
+            });
+        }
+    };
     $('#historyTable').bootstrapTable({
         method: "get",
         url: gui.App.manifest.server + gui.App.manifest.app + "/api/all_table",
@@ -70,24 +108,179 @@ function init() {
         },
         columns: [{
             field: 'id',
-            title: 'Item ID'
+            title: 'ID',
+            halign: "center",
+            align: "center",
+            valign: "middle"
         }, {
-            field: 'name',
-            title: 'Item Name'
+            field: 'table_template',
+            title: '报表名称',
+            halign: "center",
+            align: "center",
+            valign: "middle",
+            formatter: function(value, row, index) {
+                if (row.table_template) {
+                    return row.table_template.table_name;
+                }
+                return "无";
+            }
         }, {
-            field: 'price',
-            title: 'Item Price'
+            field: 'created_at',
+            title: '创建时间',
+            halign: "center",
+            align: "center",
+            valign: "middle"
         }, {
-            field: 'operate',
-            title: 'Item Operate'
+            field: 'updated_at',
+            title: '最近更新时间',
+            halign: "center",
+            align: "center",
+            valign: "middle"
+        }, {
+            field: 'user',
+            title: '创建人',
+            halign: "center",
+            align: "center",
+            valign: "middle",
+            formatter: function(value, row, index) {
+                if (row.user) {
+                    return row.user.real_name;
+                }
+                return "无";
+            }
+        }, {
+            field: 'edit_user',
+            title: '更新人',
+            halign: "center",
+            align: "center",
+            valign: "middle",
+            formatter: function(value, row, index) {
+                if (row.edit_user) {
+                    return row.edit_user.real_name;
+                }
+                return "无";
+            }
+        }, {
+            title: "操 作",
+            halign: "center",
+            align: "center",
+            valign: "middle",
+            formatter: function(value, row, index) {
+                if (currentUser.privilege == 1) {
+                    return [
+                        '<a class="edit ml10" href="javascript:void(0)" title="编辑">',
+                        '<i class="glyphicon glyphicon-edit"></i>',
+                        '</a>',
+                        '<a class="remove ml10" href="javascript:void(0)" title="删除">',
+                        '<i class="glyphicon glyphicon-remove"></i>',
+                        '</a>'
+                    ].join('');
+                } else {
+                    var str = '<a class="detail ml10" href="javascript:void(0)" title="查看"><i class="glyphicon glyphicon-th"></i></a>';
+                    return str;
+                }
+            },
+            events: historyTableControllEvent
         }]
-    }).on("load-success.bs.table", function(e, data) {
-
-    }).on("load-error.bs.table", function(e, status) {
-
     });
 
     onWindowResize();
+}
+
+function onEditTableModalShow() {
+    if (editingTable) {
+        $.get(gui.App.manifest.server + gui.App.manifest.app + "/api/data_by_tid?tid=" + editingTable.id, function(data) {
+            if (data.success) {
+                var tableData = data.data;
+                if (tableData) {
+                    var now = data.now;
+                    console.log(tableData);
+                } else {
+                    $.scojs_message('数据出错，请联系管理员！', $.scojs_message.TYPE_ERROR);
+                }
+            }
+        });
+    }
+}
+
+function onEditTableModalHide() {
+    editingTable = null;
+}
+
+function doLogout() {
+    var modal = $.scojs_confirm({
+        content: '是否确定注销当前帐号?',
+        cssClass: 'system-font modal-class',
+        action: function() {
+            baseWindow.doLogout();
+        }
+    });
+    modal.show();
+}
+
+function onPasswordModalShow() {
+    var user = currentUser;
+    $("#oldPassword").val("");
+    $("#newPassword").val("");
+    $("#userRealName").val(user.real_name);
+
+    $("#modifyBtn").off("click");
+    $("#modifyBtn").on("click", function() {
+        var oldPw = $("#oldPassword").val();
+        var newPw = $("#newPassword").val();
+        var rn = $("#userRealName").val();
+        oldPw = $.trim(oldPw);
+        newPw = $.trim(newPw);
+        rn = $.trim(rn);
+        var pattern = /\s+/g;
+        if (pattern.test(oldPw) || pattern.test(newPw)) {
+            $.scojs_message('密码不能包含空格！', $.scojs_message.TYPE_ERROR);
+            return;
+        }
+        if (oldPw == "" || newPw == "" || rn == "") {
+            $.scojs_message('密码不能为空！', $.scojs_message.TYPE_ERROR);
+            return;
+        }
+        ladda = Ladda.create(this);
+        ladda.start();
+
+        $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/update_user", {
+            uid: user.id,
+            pw: oldPw,
+            npw: newPw,
+            rn: rn
+        }, function(data) {
+            ladda.stop();
+            ladda = null;
+            if (data.success) {
+                if (data.updated) {
+                    $.scojs_message("更新成功！", $.scojs_message.TYPE_OK);
+                    localStorage.user = JSON.stringify(data.data);
+                    currentUser = data.data;
+                    $("#changePasswordModal").modal("hide");
+                } else {
+                    $.scojs_message("更新失败，请稍候重试！", $.scojs_message.TYPE_ERROR);
+                    $("#oldPassword").removeAttr("readonly");
+                    $("#newPassword").removeAttr("readonly");
+                    $("#userRealName").removeAttr("readonly");
+                }
+            } else {
+                $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+                $("#oldPassword").removeAttr("readonly");
+                $("#newPassword").removeAttr("readonly");
+                $("#userRealName").removeAttr("readonly");
+            }
+        });
+    });
+}
+
+function onPasswordModalHide() {
+    $("#oldPassword").val("");
+    $("#newPassword").val("");
+    $("#userRealName").val("");
+    $("#oldPassword").removeAttr("readonly");
+    $("#newPassword").removeAttr("readonly");
+    $("#userRealName").removeAttr("readonly");
 }
 
 function onKeysModalShow() {
@@ -201,7 +394,7 @@ function onKeysModalShow() {
                     '<a class="remove ml10" href="javascript:void(0)" title="删除">',
                     '<i class="glyphicon glyphicon-remove"></i>',
                     '</a>'
-                ].join('');;
+                ].join('');
             },
             events: keysTemplateAddControllEvent
         }]
@@ -281,9 +474,129 @@ function onKeysModalShow() {
 }
 
 function onUsersModalShow() {
+    window.usersListControllEvent = {
+        "click .edit": function(e, value, row, index) {
+            editingUser = row;
+            $("#username").attr("readonly", "readonly");
+            $("#userAddBtn span").text("更新财务");
+
+            $("#username").val(editingUser.uname);
+            $("#password").val("");
+            $("#realname").val(editingUser.real_name);
+        },
+        "click .remove": function(e, value, row, index) {
+            showConfirm("是否确认删除该财务帐号?", function() {
+                var path = gui.App.manifest.server + gui.App.manifest.app + "/api/delete_user";
+                var param = {
+                    id: row.id
+                };
+                $.post(path, param, function(data) {
+                    if (data.success) {
+                        if (data.deleted) {
+                            $.scojs_message('删除成功！', $.scojs_message.TYPE_OK);
+                            $('#usersTable').bootstrapTable("refresh", {
+                                silent: true
+                            });
+                        } else {
+                            $.scojs_message('删除失败，请稍候再试！', $.scojs_message.TYPE_ERROR);
+                        }
+                    } else {
+                        $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+                    }
+                });
+            });
+        }
+    }
+
+    $("#resetUserBtn").off("click");
+    $("#resetUserBtn").on("click", function() {
+        editingUser = null;
+        $("#username").removeAttr("readonly");
+        $("#password").removeAttr("readonly");
+        $("#realname").removeAttr("readonly");
+        $("#username").val("");
+        $("#password").val("");
+        $("#realname").val("");
+        $("#userAddBtn span").text("添加财务");
+        recreateUserTable();
+    });
+    $("#resetUserBtn").trigger("click");
+
+    $("#userAddBtn").off("click");
+    $("#userAddBtn").on("click", function() {
+        var un = $("#username").val();
+        var pw = $("#password").val();
+        var rn = $("#realname").val();
+        un = $.trim(un);
+        pw = $.trim(pw);
+        rn = $.trim(rn);
+        var pattern = /\s+/g;
+        if (pattern.test(un) || pattern.test(pw)) {
+            $.scojs_message('用户名或密码不能包含空格！', $.scojs_message.TYPE_ERROR);
+            return;
+        }
+        if (un == "" || pw == "" || rn == "") {
+            $.scojs_message('用户名、密码及真实姓名不能为空！', $.scojs_message.TYPE_ERROR);
+            return;
+        }
+        $("#username").attr("readonly", "readonly");
+        $("#password").attr("readonly", "readonly");
+        $("#realname").attr("readonly", "readonly");
+        ladda = Ladda.create(this);
+        ladda.start();
+
+        var path = gui.App.manifest.server + gui.App.manifest.app + "/api/add_user";
+        var param = {
+            acc: un,
+            pw: pw,
+            rn: rn
+        };
+        if (editingUser) {
+            path = gui.App.manifest.server + gui.App.manifest.app + "/api/update_user";
+            delete param.acc;
+            param.uid = editingUser.id;
+        }
+        $.post(path, param, function(data) {
+            ladda.stop();
+            ladda = null;
+            if (data.success) {
+                if (data.added || data.updated) {
+                    if (editingUser) {
+                        $.scojs_message('添加成功！', $.scojs_message.TYPE_OK);
+                    } else {
+                        $.scojs_message('更新成功！', $.scojs_message.TYPE_OK);
+                    }
+                    editingUser = null;
+                    $('#usersTable').bootstrapTable("refresh", {
+                        silent: true
+                    });
+                    $("#resetUserBtn").trigger("click");
+                } else {
+                    if (editingUser) {
+                        $.scojs_message('更新失败，请稍候重试！', $.scojs_message.TYPE_ERROR);
+                    } else {
+                        $.scojs_message('添加失败，请稍候重试！', $.scojs_message.TYPE_ERROR);
+                        $("#username").removeAttr("readonly");
+                    }
+                    $("#password").removeAttr("readonly");
+                    $("#realname").removeAttr("readonly");
+                }
+            } else {
+                $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+                $("#username").removeAttr("readonly");
+                $("#password").removeAttr("readonly");
+                $("#realname").removeAttr("readonly");
+            }
+        });
+    });
+}
+
+function recreateUserTable() {
+    $('#usersTable').bootstrapTable("destroy");
     $('#usersTable').bootstrapTable({
         method: 'get',
-        url: 'http://wenzhixin.net.cn/p/bootstrap-table/docs/data1.json',
+        url: gui.App.manifest.server + gui.App.manifest.app + "/api/all_users",
+        sidePagination: "server",
         cache: false,
         height: 300,
         striped: false,
@@ -311,20 +624,45 @@ function onUsersModalShow() {
             return pageNumber + "条/页";
         },
         columns: [{
-            field: 'state',
-            checkbox: true
+            field: 'uname',
+            title: '用户名',
+            halign: "center",
+            align: "center",
+            vlign: "middle"
         }, {
-            field: 'id',
-            title: 'Item ID'
+            field: 'real_name',
+            title: '真实姓名',
+            halign: "center",
+            align: "center",
+            vlign: "middle"
         }, {
-            field: 'name',
-            title: 'Item Name'
+            field: 'created_at',
+            title: '创建时间',
+            halign: "center",
+            align: "center",
+            vlign: "middle"
         }, {
-            field: 'price',
-            title: 'Item Price'
+            field: 'updated_at',
+            title: '最近更新时间',
+            halign: "center",
+            align: "center",
+            vlign: "middle"
         }, {
-            field: 'operate',
-            title: 'Item Operate'
+            title: "操 作",
+            halign: "center",
+            align: "center",
+            vlign: "middle",
+            formatter: function(value, row, index) {
+                return [
+                    '<a class="edit ml10" href="javascript:void(0)" title="编辑">',
+                    '<i class="glyphicon glyphicon-edit"></i>',
+                    '</a>',
+                    '<a class="remove ml10" href="javascript:void(0)" title="删除">',
+                    '<i class="glyphicon glyphicon-remove"></i>',
+                    '</a>'
+                ].join('');;
+            },
+            events: usersListControllEvent
         }]
     });
 }
@@ -351,16 +689,46 @@ function onAddTableModalShow() {
     });
     $("#scopeSelect").on("change", function(event) {
         if (event.val == 1) {
+            $("#userIds").select2("enable", true);
+            $("#userIds").select2("val", "");
             $("#userIds").select2({
-                "tags": []
-            });
-            $("#userIds").select2("container").find("ul.select2-choices").sortable({
-                containment: 'parent',
-                start: function() {
-                    $("#userIds").select2("onSortStart");
+                width: "100%",
+                placeholder: "请指定报表可见的财务人员",
+                loadMorePadding: 10,
+                multiple: true,
+                ajax: {
+                    url: gui.App.manifest.server + gui.App.manifest.app + "/api/all_users",
+                    dataType: "json",
+                    data: function(term, page) {
+                        return {
+                            limit: page * 10,
+                            offset: (page - 1) * 10
+                        }
+                    },
+                    results: function(term, page) {
+                        return {
+                            results: term.rows,
+                            more: page * 10 < term.total
+                        }
+                    }
                 },
-                update: function() {
-                    $("#userIds").select2("onSortEnd");
+                formatResult: function(item) {
+                    return item.real_name;
+                },
+                formatSelection: function(item) {
+                    return item.real_name;
+                },
+                formatLoadMore: function(pageNumber) {
+                    return "正在加载，请稍候..."
+                },
+                formatNoMatches: function(term) {
+                    return "无任何数据";
+                },
+                formatSearching: function() {
+                    return "正在加载，请稍候..."
+                },
+                formatAjaxError: function(jqXHR, textStatus, errorThrown) {
+                    return "status:" + textStatus + " error:" + errorThrown;
                 }
             });
         } else {
@@ -382,19 +750,19 @@ function onAddTableModalShow() {
             showConfirm("有数据未保存，是否确认退出?", function() {
                 $("#addTableModal").modal("hide");
             });
+        } else {
+            $("#addTableModal").modal("hide");
         }
     });
 
     $("#tableName").removeAttr("readonly");
     $("#daysNum").removeAttr("readonly");
     $("#scopeSelect").select2("enable", true);
-    $("#userIds").select2("enable", true);
     $("#typeSelect").select2("enable", true);
     $("#isDisabled").bootstrapSwitch("readonly", false);
     $("#tableName").val("");
     $("#daysNum").val("");
     $("#scopeSelect").select2("val", 0);
-    $("#userIds").select2("val", "");
     $("#isDisabled").bootstrapSwitch("state", true);
 
     $("#addTableBtn").off("click");
@@ -415,8 +783,8 @@ function onAddTableModalShow() {
         if (scopeSelect == 1 && (!ids || ids == "")) {
             $.scojs_message('请指定可见的财务人员!', $.scojs_message.TYPE_ERROR);
             return;
-        } else {
-            ids = "";
+        } else if (scopeSelect == 0) {
+            ids = [];
         }
         var typeSelect = $("#typeSelect").select2("val");
         var daysNum = $("#daysNum").val();
@@ -509,18 +877,94 @@ function onModalHide() {
 }
 
 function onCreateTableModalShow() {
+    $("#createTableSelect").select2("destroy");
+    $("#createTableSelect").select2("val", "");
     $("#createTableSelect").select2({
-        width: "100%"
+        width: "100%",
+        placeholder: "请选择报表模板",
+        loadMorePadding: 10,
+        ajax: {
+            url: gui.App.manifest.server + gui.App.manifest.app + "/api/all_template",
+            dataType: "json",
+            data: function(term, page) {
+                return {
+                    limit: page * 10,
+                    offset: (page - 1) * 10
+                }
+            },
+            results: function(term, page) {
+                var result;
+                if (currentUser.privilege == 1) {
+                    result = term.rows;
+                } else {
+                    result = [];
+                    term.forEach(function(item) {
+                        result.push(item.table_template);
+                    });
+                }
+                return {
+                    results: result,
+                    more: page * 10 < term.total
+                }
+            }
+        },
+        formatResult: function(item) {
+            return item.table_name;
+        },
+        formatSelection: function(item) {
+            return item.table_name;
+        },
+        formatLoadMore: function(pageNumber) {
+            return "正在加载，请稍候..."
+        },
+        formatNoMatches: function(term) {
+            return "无任何数据";
+        },
+        formatSearching: function() {
+            return "正在加载，请稍候..."
+        },
+        formatAjaxError: function(jqXHR, textStatus, errorThrown) {
+            return "status:" + textStatus + " error:" + errorThrown;
+        }
+    });
+    $("#createTableSelect").select2("enable", true);
+
+    $("#createTableBtn").off("click");
+    $("#createTableBtn").on("click", function() {
+        ladda = Ladda.create(this);
+        ladda.start();
+        var tid = $("#createTableSelect").select2("val");
+        var path = gui.App.manifest.server + gui.App.manifest.app + "/api/create_table";
+        $.post(path, {
+            tid: tid
+        }, function(data) {
+            ladda.stop();
+            ladda = null;
+            if (data.success) {
+                if (data.added) {
+                    $.scojs_message('创建成功!', $.scojs_message.TYPE_OK);
+                    $("#historyTable").bootstrapTable("refresh", {
+                        silent: true
+                    });
+                    $("#createTableModal").modal("hide");
+                    $("#editTableModal").modal("show");
+                } else {
+                    $.scojs_message('创建报表失败!', $.scojs_message.TYPE_ERROR);
+                }
+            } else {
+                $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+            }
+        });
     });
 }
 
 function onTablesModalShow() {
     window.tablesTableControllEvent = {
         "click .edit": function(e, value, row, index) {
-            
+
         },
         "click .remove": function(e, value, row, index) {
-            showConfirm("是否确认删除该报表模板？", function(){
+            showConfirm("是否确认删除该报表模板？", function() {
                 alert("enter");
             });
         }

@@ -31,7 +31,8 @@
                             <li><a href="#" id="createTable" data-toggle="modal" data-target="#createTableModal">创建报表</a>
                             </li>
                             <li class="divider"></li>
-                            <li><a href="#" id="exitBtn">退出</a>
+                            <li><a href="#" id="logoutBtn">注 销</a>
+                            <li><a href="#" id="exitBtn">退 出</a>
                             </li>
                         </ul>
                     </li>
@@ -47,7 +48,7 @@
                             <li><a href="#" id="addUser" data-toggle="modal" data-target="#usersModal">所有财务人员</a>
                             </li>
                             <li class="divider"></li>
-                            <li><a href="#" id="changePassword" data-toggle="modal" data-target="#changePasswordModal">修改密码</a>
+                            <li><a href="#" id="changePassword" data-toggle="modal" data-target="#changePasswordModal">修改资料</a>
                             </li>
                         </ul>
                     </li>
@@ -66,10 +67,6 @@
             <table id="historyTable">
                 <thead>
                     <tr>
-                        <th data-field="state" data-checkbox="true"></th>
-                        <th data-field="id">Item ID</th>
-                        <th data-field="name">Item Name</th>
-                        <th data-field="price">Item Price</th>
                     </tr>
                 </thead>
             </table>
@@ -137,10 +134,6 @@
                     <table id="usersTable">
                         <thead>
                             <tr>
-                                <th data-field="state" data-checkbox="true"></th>
-                                <th data-field="id">Item ID</th>
-                                <th data-field="name">Item Name</th>
-                                <th data-field="price">Item Price</th>
                             </tr>
                         </thead>
                     </table>
@@ -155,19 +148,19 @@
                                 <div class="form-group form-group-lg">
                                     <div class="input-group">
                                         <span class="input-group-addon">帐号</span>
-                                        <input type="text" class="form-control" placeholder="请输入帐号">
+                                        <input type="text" class="form-control" id="username" placeholder="请输入帐号">
                                     </div>
                                 </div>
                                 <div class="form-group form-group-lg">
                                     <div class="input-group">
                                         <span class="input-group-addon">密码</span>
-                                        <input type="password" class="form-control" placeholder="请输入密码">
+                                        <input type="password" class="form-control" id="password" placeholder="请输入密码">
                                     </div>
                                 </div>
                                 <div class="form-group form-group-lg">
                                     <div class="input-group">
                                         <span class="input-group-addon">姓名</span>
-                                        <input type="text" class="form-control" placeholder="请输入真实姓名">
+                                        <input type="text" class="form-control" id="realname" placeholder="请输入真实姓名">
                                     </div>
                                 </div>
                                 <div class="form-group form-group-lg">
@@ -179,6 +172,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                	<button type="button" class="btn btn-danger" id="resetUserBtn">重 置</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">关 闭</button>
                 </div>
             </div>
@@ -270,8 +264,7 @@
                 </div>
                 <div class="modal-footer">
                 	<button type="button" class="btn btn-default" id="cancelTableAdd">取 消</button>
-                    <button type="button" class="btn btn-primary system-font btn-lg ladda-button" id="addTableBtn" data-style="expand-right"><span class="ladda-label">添加报表</span>
-                            </button>
+                    <button type="button" class="btn btn-primary system-font btn-lg ladda-button" id="addTableBtn" data-style="expand-right"><span class="ladda-label">添加报表</span></button>
                 </div>
             </div>
         </div>
@@ -328,8 +321,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group form-group-lg">
-                                    <button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="keyAddBtn" data-style="expand-right"><span class="ladda-label">添加字段</span>
-                                    </button>
+                                    <button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="keyAddBtn" data-style="expand-right"><span class="ladda-label">添加字段</span></button>
                                 </div>
                             </div>
                         </div>
@@ -347,26 +339,32 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">修改密码</h4>
+                    <h4 class="modal-title">修改资料</h4>
                 </div>
                 <div class="modal-body">
                     <div role="form">
                         <div class="form-group form-group-lg">
                             <div class="input-group">
                                 <span class="input-group-addon">原密码</span>
-                                <input type="password" class="form-control" placeholder="请输入原密码">
+                                <input type="password" class="form-control" id="oldPassword" placeholder="请输入原密码">
                             </div>
                         </div>
                         <div class="form-group form-group-lg">
                             <div class="input-group">
                                 <span class="input-group-addon">新密码</span>
-                                <input type="password" class="form-control" placeholder="请输入新密码">
+                                <input type="password" class="form-control" id="newPassword" placeholder="请输入新密码">
+                            </div>
+                        </div>
+                        <div class="form-group form-group-lg">
+                            <div class="input-group">
+                                <span class="input-group-addon">真实姓名</span>
+                                <input type="text" class="form-control" id="userRealName" placeholder="请输入真实姓名">
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">确 定</button>
+                	<button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="modifyBtn" data-style="expand-right"><span class="ladda-label">确认修改</span>
                 </div>
             </div>
         </div>
@@ -383,12 +381,12 @@
                     <div class="form-group form-group-lg">
                         <div class="input-group">
                             <span class="input-group-addon">选择报表:</span>
-                            <select id="createTableSelect"></select>
+                            <input type="text" id="createTableSelect" />
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">创 建</button>
+                    <button type="button" class="btn btn-primary system-font btn-lg ladda-button" id="createTableBtn" data-style="expand-right"><span class="ladda-label">创 建</span></button>
                 </div>
             </div>
         </div>
@@ -405,10 +403,6 @@
                     <table id="editTable">
                         <thead>
                             <tr>
-                                <th data-field="state" data-checkbox="true"></th>
-                                <th data-field="id">Item ID</th>
-                                <th data-field="name">Item Name</th>
-                                <th data-field="price">Item Price</th>
                             </tr>
                         </thead>
                     </table>
