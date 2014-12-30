@@ -43,7 +43,7 @@
                             </li>
                             <li><a href="#" id="allTableTemplate" data-toggle="modal" data-target="#tablesModal">查看报表模板</a>
                             </li>
-                            <li><a href="#" id="addTableTemplate" data-toggle="modal" data-target="#addTableModal">添加报表模板</a>
+                            <li><a href="#" id="addTableTemplate" data-toggle="modal" data-target="#addTableModal">添加/修改报表模板</a>
                             </li>
                             <li><a href="#" id="addUser" data-toggle="modal" data-target="#usersModal">所有财务人员</a>
                             </li>
@@ -206,7 +206,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">添加报表模板</h4>
+                    <h4 class="modal-title">添加/修改报表模板</h4>
                 </div>
                 <div class="modal-body">
                     <div role="form">
@@ -215,7 +215,7 @@
                                 <span class="input-group-addon">报表名称</span>
                                 <input type="text" class="form-control" id="tableName" placeholder="请输入报表名称">
                                 <span class="input-group-btn">
-									<button class="btn btn-default btn-lg" type="button" data-toggle="modal" data-target="#addKeyModal">添加报表字段</button>
+									<button class="btn btn-default btn-lg" type="button" data-toggle="modal" data-target="#addKeyModal">添加/修改报表字段</button>
 								</span>
                             </div>
                         </div>
@@ -409,6 +409,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">关 闭</button>
+                    <button type="button" class="btn btn-primary system-font btn-lg ladda-button" id="updateTableBtn" data-style="expand-right"><span class="ladda-label">提 交</span></button>
                 </div>
             </div>
         </div>

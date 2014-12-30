@@ -14,7 +14,12 @@ var tempTags;
 
 var editingUser;
 var editingTable;
+var editingTableTemplate;
 var tempId;
+var canEdit = false;
+var serverTime = 0;
+var tempTime = 0;
+var isPreview = false;
 
 var currentUser = JSON.parse(localStorage.user);
 
@@ -39,19 +44,23 @@ function init() {
 
     $("#createTableModal").on("show.bs.modal", onCreateTableModalShow);
     $("#tablesModal").on("show.bs.modal", onTablesModalShow);
-    $("#editModal").on("show.bs.modal", onEditModalShow);
 
     $("#keysModal").on("hide.bs.modal", onModalHide);
     $("#usersModal").on("hide.bs.modal", onModalHide);
     $("#createTableModal").on("hide.bs.modal", onModalHide);
-    $("#editModal").on("hide.bs.modal", onModalHide);
     $("#addTableModal").on("hide.bs.modal", onModalHide);
 
     $("#editTableModal").on("show.bs.modal", onEditTableModalShow);
     $("#editTableModal").on("hide.bs.modal", onEditTableModalHide);
 
     window.historyTableControllEvent = {
+        "click .detail": function(e, value, row, index){
+            editingTable = row;
+            isPreview = true;
+            $("#editTableModal").modal("show");
+        },
         "click .edit": function(e, value, row, index) {
+            isPreview = false;
             editingTable = row;
             $("#editTableModal").modal("show");
         },
@@ -105,6 +114,10 @@ function init() {
         },
         formatRecordsPerPage: function(pageNumber) {
             return pageNumber + "条/页";
+        },
+        responseHandler: function(res){
+            serverTime = res.now;
+            return res;
         },
         columns: [{
             field: 'id',
@@ -168,15 +181,19 @@ function init() {
             formatter: function(value, row, index) {
                 if (currentUser.privilege == 1) {
                     return [
+                        '<a class="detail ml10" href="javascript:void(0)" title="查看"><i class="glyphicon glyphicon-th"></i></a>&nbsp;&nbsp;',
                         '<a class="edit ml10" href="javascript:void(0)" title="编辑">',
                         '<i class="glyphicon glyphicon-edit"></i>',
-                        '</a>',
+                        '</a>&nbsp;&nbsp;',
                         '<a class="remove ml10" href="javascript:void(0)" title="删除">',
                         '<i class="glyphicon glyphicon-remove"></i>',
                         '</a>'
                     ].join('');
                 } else {
                     var str = '<a class="detail ml10" href="javascript:void(0)" title="查看"><i class="glyphicon glyphicon-th"></i></a>';
+                    if(row.edit_user_id == 0 || row.temp_edit > serverTime){
+                        str += '&nbsp;&nbsp;<a class="edit ml10" href="javascript:void(0)" title="编辑"><i class="glyphicon glyphicon-edit"></i></a>';
+                    }
                     return str;
                 }
             },
@@ -189,22 +206,202 @@ function init() {
 
 function onEditTableModalShow() {
     if (editingTable) {
-        $.get(gui.App.manifest.server + gui.App.manifest.app + "/api/data_by_tid?tid=" + editingTable.id, function(data) {
-            if (data.success) {
-                var tableData = data.data;
-                if (tableData) {
-                    var now = data.now;
-                    console.log(tableData);
-                } else {
-                    $.scojs_message('数据出错，请联系管理员！', $.scojs_message.TYPE_ERROR);
-                }
+        window.editingTableControllEvent = {
+            "click .source": function(e, value, row, index) {
+                console.log(row);
             }
+        };
+        $('#editTable').bootstrapTable("destroy");
+        $('#editTable').bootstrapTable({
+            method: 'get',
+            url: gui.App.manifest.server + gui.App.manifest.app + "/api/data_by_tid?tid=" + editingTable.id,
+            sidePagination: "server",
+            height: 500,
+            cache: false,
+            striped: false,
+            showColumns: false,
+            formatLoadingMessage: function() {
+                return "正在加载，请稍候...";
+            },
+            formatShowingRows: function(pageFrom, pageTo, totalRows) {
+                return '显示 ' + pageFrom + ' 到 ' + pageTo + ' 共 ' + totalRows + ' 条';
+            },
+            formatSearch: function() {
+                return "搜索...";
+            },
+            formatNoMatches: function() {
+                return "当前无任何数据...";
+            },
+            formatRefresh: function() {
+                return "刷新";
+            },
+            formatRecordsPerPage: function(pageNumber) {
+                return pageNumber + "条/页";
+            },
+            responseHandler: function(res){
+                serverTime = res.now;
+                var data = res.rows;
+                if(data.edit_user_id == 0 || data.temp_edit > serverTime){
+                    canEdit = true;
+                }else{
+                    canEdit = false;
+                }
+                if(data && data.keys){
+                    var rows = data.keys;
+                    editingTable = data;
+                    return {"rows": rows};
+                }
+                return res;
+            },
+            columns: [{
+                field: 'key_template',
+                title: '字段名称',
+                halign: "center",
+                align: "center",
+                valign: "middle",
+                formatter: function(value, row, index){
+                    if(row.key_template){
+                        var str = '<div class="control-group"><label class="control-label" for="input01">' + row.key_template.key_name + '</label></div>';
+                        if(row.key_template.remark && row.key_template.remark != ""){
+                            str += '<p class="help-block" style="font-size:12px;">' + row.key_template.remark + '</p>';
+                        }
+                        return str;
+                    }
+                    return '<span style="color:red;">数据出错</span>';
+                }
+            }, {
+                field: 'value',
+                title: '值',
+                halign: "center",
+                align: "center",
+                valign: "middle",
+                formatter: function(value, row, index) {
+                    if(!isPreview){
+                        if(!row.data_source || !row.data_source.length){
+                            if(currentUser.privilege == 1 || canEdit){
+                                return '<div class="form-group" style="margin:0px;"><input type="text" class="value-cell form-control" value-type="' + row.value_type + '" key-id="' + row.id + '" value="' + (row.value ? row.value.value : "") + '"></div>';
+                            }
+                        }else{
+                            return '<a class="source ml10" href="javascript:void(0)" title="获取数据源数据"><i class="glyphicon glyphicon-folder-open"></i></a>';
+                        }
+                    }else if(row.data_source && row.data_source.length){
+                        return '<a class="source ml10" href="javascript:void(0)" title="获取数据源数据"><i class="glyphicon glyphicon-folder-open"></i></a>';
+                    }
+                    return row.value ? row.value.value : "";
+                },
+                events: editingTableControllEvent
+            }, {
+                field: 'value_type',
+                title: '值类型',
+                halign: "center",
+                align: "center",
+                valign: "middle",
+                formatter: function(value, row, index){
+                    if(row.value_type == 0){
+                        return "数字";
+                    }
+                    return "字符";
+                }
+            }, {
+                field: 'remark',
+                title: '值备注',
+                halign: "center",
+                align: "center",
+                valign: "middle",
+                formatter: function(value, row, index){
+                    if(!isPreview){
+                        if(canEdit || currentUser.privilege == 1){
+                            if(row.value){
+                                return '<input type="text" class="remark-cell form-control" key-id="' + row.id + '" value="' + (row.value.remark ? row.value.remark : "") + '">';
+                            }else{
+                                return '<input type="text" class="remark-cell form-control" key-id="' + row.id + '" value="">';
+                            }
+                        }
+                    }
+                    if(row.value){
+                        return row.value ? row.value.remark : "";
+                    }
+                    return "无";
+                }
+            }]
+        });
+        $("#updateTableBtn").off("click");
+        $("#updateTableBtn").on("click", function(){
+            showConfirm("一旦提交数据，将无法再次修改，是否确认提交？", submitData);
         });
     }
 }
 
+function submitData(){
+    ladda = Ladda.create($("#updateTableBtn")[0]);
+    ladda.start();
+
+    var valueCells = $("#editTable .value-cell").toArray();
+    var remarkCells = $("#editTable .remark-cell").toArray();
+    $("#editTable input").attr("readonly", "readonly");
+    var arr = {};
+    var valid = true;
+    var validArr = [];
+    valueCells.forEach(function(valueCell){
+        var cell = $(valueCell);
+        arr[cell.attr("key-id")] = {};
+        if(cell.hasClass("has-error")){
+            cell.removeClass("has-error");
+        }
+        var valueType = cell.attr("value-type");
+        var cellVal = cell.val();
+        if(valueType == 0){
+            cellVal = parseFloat(cellVal);
+            if(isNaN(cellVal)){
+                valid = false;
+                validArr.push(cell);
+            }else{
+                arr[cell.attr("key-id")]["value"] = cellVal;
+            }
+        }else{
+            arr[cell.attr("key-id")]["value"] = cellVal;
+        }
+    });
+    if(!valid){
+        $.scojs_message('提交的报表中存在值与值类型不匹配项，请修改后再次提交！', $.scojs_message.TYPE_ERROR);
+        validArr.forEach(function(cell){
+            cell.parent().addClass("has-error");
+        });
+        ladda.stop();
+        ladda = null;
+        $("#editTable input").removeAttr("readonly");
+        return;
+    }else{
+        remarkCells.forEach(function(remarkCell){
+            var cell = $(remarkCell);
+            var remarkValue = cell.val();
+            if(!arr[cell.attr("key-id")]){
+                arr[cell.attr("key-id")] = {};
+            }
+            arr[cell.attr("key-id")]["remark"] = $.trim(remarkValue);
+        });
+    }
+    $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/update_table_values", {values: arr, tid: editingTable.id}, function(data){
+        ladda.stop();
+        ladda = null;
+        $("#editTable input").removeAttr("readonly");
+        if(data.success){
+            if(data.updated){
+                $.scojs_message('提交成功！', $.scojs_message.TYPE_OK);
+                $("#editTableModal").modal("hide");
+                $("#historyTable").bootstrapTable("refresh", {silent: true});
+            }else{
+                $.scojs_message('提交失败，请稍候再试！', $.scojs_message.TYPE_ERROR);
+            }
+        }else{
+            $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+        }
+    });
+}
+
 function onEditTableModalHide() {
     editingTable = null;
+    onModalHide();
 }
 
 function doLogout() {
@@ -675,6 +872,11 @@ function onAddTableModalShow() {
     $("#typeSelect").on("change", function(event) {
         if (event.val == 2 || event.val == 3) {
             $("#daysInput input").val("");
+            if(editingTableTemplate){
+                if(editingTableTemplate.days != 0){
+                    $("#daysInput input").val(editingTableTemplate.days);
+                }
+            }
             $("#daysInput").show();
         } else {
             $("#daysInput").hide();
@@ -764,10 +966,20 @@ function onAddTableModalShow() {
     $("#daysNum").val("");
     $("#scopeSelect").select2("val", 0);
     $("#isDisabled").bootstrapSwitch("state", true);
+    if(editingTableTemplate){
+        if(editingTableTemplate.disabled == 1){
+            $("#isDisabled").bootstrapSwitch("state", false);
+        }
+        $("#scopeSelect").select2("val", editingTableTemplate.scope);
+        $("#typeSelect").select2("val", editingTableTemplate.type);
+        if(editingTableTemplate.days != 0){
+            $("#daysNum").val(editingTableTemplate.days);
+        }
+        $("#tableName").val(editingTableTemplate.table_name);
+    }
 
     $("#addTableBtn").off("click");
     $("#addTableBtn").on("click", function() {
-        console.log("message");
         if (!keys || !keys.length) {
             $.scojs_message('该报表未添加任何字段，无法保存!', $.scojs_message.TYPE_ERROR);
             return;
@@ -857,7 +1069,6 @@ function onModalHide() {
     changingData = null;
 
     $('#keysTable').bootstrapTable("destroy");
-    $('#tablesTable').bootstrapTable("destroy");
 
     if (canClear) {
         $("#addTableModal").bootstrapTable("destroy");
@@ -898,7 +1109,7 @@ function onCreateTableModalShow() {
                     result = term.rows;
                 } else {
                     result = [];
-                    term.forEach(function(item) {
+                    term.rows.forEach(function(item) {
                         result.push(item.table_template);
                     });
                 }
@@ -947,7 +1158,6 @@ function onCreateTableModalShow() {
                         silent: true
                     });
                     $("#createTableModal").modal("hide");
-                    $("#editTableModal").modal("show");
                 } else {
                     $.scojs_message('创建报表失败!', $.scojs_message.TYPE_ERROR);
                 }
@@ -961,14 +1171,28 @@ function onCreateTableModalShow() {
 function onTablesModalShow() {
     window.tablesTableControllEvent = {
         "click .edit": function(e, value, row, index) {
-
+            editingTableTemplate = row;
+            $("#addTableModal").modal("show");
         },
         "click .remove": function(e, value, row, index) {
+            tempId = row.id;
             showConfirm("是否确认删除该报表模板？", function() {
-                alert("enter");
+                $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/delete_table_template", {tid: tempId}, function(data){
+                    if(data.success){
+                        if(data.deleted){
+                            $.scojs_message('删除成功!', $.scojs_message.TYPE_OK);
+                            $('#tablesTable').bootstrapTable("refresh", {silent: true});
+                        }else{
+                            $.scojs_message('删除失败，请稍候再试！!', $.scojs_message.TYPE_ERROR);
+                        }
+                    }else{
+                        $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+                    }
+                });
             });
         }
     }
+    $('#tablesTable').bootstrapTable("destroy");
     $('#tablesTable').bootstrapTable({
         method: 'get',
         url: gui.App.manifest.server + gui.App.manifest.app + "/api/all_table_template",
@@ -1078,7 +1302,7 @@ function onTablesModalShow() {
                 return [
                     '<a class="edit ml10" href="javascript:void(0)" title="编辑">',
                     '<i class="glyphicon glyphicon-edit"></i>',
-                    '</a>',
+                    '</a>&nbsp;&nbsp;',
                     '<a class="remove ml10" href="javascript:void(0)" title="删除">',
                     '<i class="glyphicon glyphicon-remove"></i>',
                     '</a>'
@@ -1261,12 +1485,37 @@ function onAddKeyModalShow() {
         });
     });
 
+    if(editingTableTemplate){
+        tableId = editingTableTemplate.id;
+    }
+    window.templateKeyControllEvent = {
+        "click .edit": function(e, value, row, index) {
+            
+        },
+        "click .remove": function(e, value, row, index) {
+            tempId = row.id;
+            showConfirm("是否确定删除此字段？", function(){
+                $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/delete_key", {id: tempId}, function(data){
+                    if(data.success){
+                        if(data.deleted){
+                            $.scojs_message('删除成功!', $.scojs_message.TYPE_OK);
+                            $('#addKeyTable').bootstrapTable("refresh", {silent: true});
+                        }else{
+                            $.scojs_message('删除失败，请稍候再试！!', $.scojs_message.TYPE_ERROR);
+                        }
+                    }else{
+                        $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+                    }
+                });
+            });
+        }
+    }
     $('#addKeyTable').bootstrapTable({
         method: "get",
         url: gui.App.manifest.server + gui.App.manifest.app + "/api/keys_by_tid?tid=" + tableId,
         sidePagination: "server",
         cache: false,
-        height: 200,
+        height: 300,
         striped: false,
         pagination: true,
         pageSize: 10,
@@ -1321,7 +1570,7 @@ function onAddKeyModalShow() {
             align: "center",
             valign: "middle",
             formatter: function(value, row, index) {
-                if (row.data_source) {
+                if (row.data_source && row.data_source.length) {
                     return row.data_source[0].source_key.table_template.table_name;
                 }
             }
@@ -1332,7 +1581,7 @@ function onAddKeyModalShow() {
             align: "center",
             valign: "middle",
             formatter: function(value, row, index) {
-                if (row.data_source) {
+                if (row.data_source && row.data_source.length) {
                     return row.data_source[0].source_key.key_template.key_name;
                 }
             }
@@ -1342,8 +1591,26 @@ function onAddKeyModalShow() {
             halign: "center",
             align: "center",
             valign: "middle"
+        }, {
+            field: "remark",
+            title: '操作',
+            halign: "center",
+            align: "center",
+            valign: "middle",
+            formatter: function(value, row, index) {
+                return [
+                    '<a class="edit ml10" href="javascript:void(0)" title="编辑">',
+                    '<i class="glyphicon glyphicon-edit"></i>',
+                    '</a>&nbsp;&nbsp;',
+                    '<a class="remove ml10" href="javascript:void(0)" title="删除">',
+                    '<i class="glyphicon glyphicon-remove"></i>',
+                    '</a>'
+                ].join('');;
+            },
+            events: templateKeyControllEvent
         }]
     });
+            
     $("#keyAddBtn").off("click");
     $("#keyAddBtn").on("click", function() {
         var selectKey = $("#selectKey").select2("val");
@@ -1424,71 +1691,6 @@ function existInKeys(obj) {
         });
     }
     return bool;
-}
-
-function onEditModalShow() {
-    $('#editTable').bootstrapTable({
-        method: 'get',
-        url: 'http://192.168.2.100/data1.json',
-        sidePagination: "server",
-        height: 500,
-        cache: false,
-        striped: false,
-        search: true,
-        pageList: [],
-        showColumns: false,
-        showRefresh: true,
-        formatLoadingMessage: function() {
-            return "正在加载，请稍候...";
-        },
-        formatShowingRows: function(pageFrom, pageTo, totalRows) {
-            return '显示 ' + pageFrom + ' 到 ' + pageTo + ' 共 ' + totalRows + ' 条';
-        },
-        formatSearch: function() {
-            return "搜索...";
-        },
-        formatNoMatches: function() {
-            return "当前无任何数据...";
-        },
-        formatRefresh: function() {
-            return "刷新";
-        },
-        formatRecordsPerPage: function(pageNumber) {
-            return pageNumber + "条/页";
-        },
-        columns: [{
-            field: 'id',
-            title: 'Item ID',
-            halign: "center",
-            align: "center",
-            valign: "middle"
-        }, {
-            field: 'name',
-            title: 'Item Name',
-            halign: "center",
-            align: "center",
-            valign: "middle",
-            formatter: function(value, row, index) {
-                return '<input type="password" class="form-control" placeholder="请输入原密码">';
-            }
-        }, {
-            field: 'price',
-            title: 'Item Price',
-            halign: "center",
-            align: "center",
-            valign: "middle"
-        }, {
-            field: 'operate',
-            title: 'Item Operate',
-            halign: "center",
-            align: "center",
-            valign: "middle"
-        }]
-    }).on("load-success.bs.table", function(e, data) {
-
-    }).on("load-error.bs.table", function(e, status) {
-
-    });
 }
 
 function onWindowResize() {

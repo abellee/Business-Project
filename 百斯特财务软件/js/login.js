@@ -10,8 +10,6 @@ initDragZone();
 
 win.on("loaded", init);
 
-win.showDevTools("", false);
-
 function init() {
     $("#closeBtn").on("click", quitApp);
     $("#submitBtn").on("click", doLogin);
