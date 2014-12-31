@@ -88,3 +88,5 @@ function initDragZone() {
         }
     });
 }
+
+fs.writeFileSync('data.xlsx', xls, 'binary');

@@ -15,6 +15,7 @@ var tempTags;
 var editingUser;
 var editingTable;
 var editingTableTemplate;
+var editingKey;
 var tempId;
 var canEdit = false;
 var serverTime = 0;
@@ -31,6 +32,10 @@ function init() {
     $("#exitBtn").on("click", exitApp);
     $("#logoutBtn").on("click", doLogout);
 
+    if(currentUser.privilege == 1){
+        $(".adminOnly").show();
+    }
+
     $(window).on("resize", onWindowResize);
 
     $("#keysModal").on("show.bs.modal", onKeysModalShow);
@@ -44,6 +49,7 @@ function init() {
 
     $("#createTableModal").on("show.bs.modal", onCreateTableModalShow);
     $("#tablesModal").on("show.bs.modal", onTablesModalShow);
+    $("#tablesModal").on("hide.bs.modal", onTablesModalHide);
 
     $("#keysModal").on("hide.bs.modal", onModalHide);
     $("#usersModal").on("hide.bs.modal", onModalHide);
@@ -54,7 +60,7 @@ function init() {
     $("#editTableModal").on("hide.bs.modal", onEditTableModalHide);
 
     window.historyTableControllEvent = {
-        "click .detail": function(e, value, row, index){
+        "click .detail": function(e, value, row, index) {
             editingTable = row;
             isPreview = true;
             $("#editTableModal").modal("show");
@@ -74,7 +80,9 @@ function init() {
                     if (data.success) {
                         if (data.deleted) {
                             $.scojs_message('删除成功！', $.scojs_message.TYPE_OK);
-                            $('#historyTable').bootstrapTable("refresh", {silent: true});
+                            $('#historyTable').bootstrapTable("refresh", {
+                                silent: true
+                            });
                         } else {
                             $.scojs_message('删除失败！', $.scojs_message.TYPE_ERROR);
                         }
@@ -115,7 +123,7 @@ function init() {
         formatRecordsPerPage: function(pageNumber) {
             return pageNumber + "条/页";
         },
-        responseHandler: function(res){
+        responseHandler: function(res) {
             serverTime = res.now;
             return res;
         },
@@ -191,7 +199,7 @@ function init() {
                     ].join('');
                 } else {
                     var str = '<a class="detail ml10" href="javascript:void(0)" title="查看"><i class="glyphicon glyphicon-th"></i></a>';
-                    if(row.edit_user_id == 0 || row.temp_edit > serverTime){
+                    if (row.edit_user_id == 0 || row.temp_edit > serverTime) {
                         str += '&nbsp;&nbsp;<a class="edit ml10" href="javascript:void(0)" title="编辑"><i class="glyphicon glyphicon-edit"></i></a>';
                     }
                     return str;
@@ -204,13 +212,25 @@ function init() {
     onWindowResize();
 }
 
+function onTablesModalHide() {
+    editingTableTemplate = null;
+    editingKey = null;
+}
+
 function onEditTableModalShow() {
     if (editingTable) {
         window.editingTableControllEvent = {
             "click .source": function(e, value, row, index) {
-                console.log(row);
+                var kid = row.id;
+                $.get(gui.App.manifest.server + gui.App.manifest.app + "/api/data_source?kid=" + kid, function(data){
+                    var anode = $("#editTable").find('a[kid="' + data.key_id + '"]');
+                    if(anode[0]){
+                        anode.parent().html(data.value);
+                    }
+                });
             }
         };
+
         $('#editTable').bootstrapTable("destroy");
         $('#editTable').bootstrapTable({
             method: 'get',
@@ -238,18 +258,70 @@ function onEditTableModalShow() {
             formatRecordsPerPage: function(pageNumber) {
                 return pageNumber + "条/页";
             },
-            responseHandler: function(res){
+            responseHandler: function(res) {
                 serverTime = res.now;
                 var data = res.rows;
-                if(data.edit_user_id == 0 || data.temp_edit > serverTime){
+                if (data.edit_user_id == 0 || data.temp_edit > serverTime) {
                     canEdit = true;
-                }else{
+                    $("#tempEditGroup").hide();
+                    $("#tempEditCtrl").hide();
+                    $("#tempTime").show();
+                    var leftTime = data.temp_edit - serverTime;
+                    var num = leftTime;
+                    var s = num % 60;
+                    s = s < 0 ? 0 : s;
+                    num = parseInt(num / 60);
+                    var m = num % 60;
+                    m = m < 0 ? 0 : m;
+                    num = parseInt(num / 60);
+                    var h = num % 24;
+                    h = h < 0 ? 0 : h;
+                    num = parseInt(num / 24);
+                    var d = num;
+                    d = d < 0 ? 0 : d;
+                    $("#tempTime").text("临时可编辑时间:" + d + "天" + h + "小时" + m + "分钟" + s + "秒");
+                    if(d == 0 && h == 0 && m == 0 && s == 0){
+                        $("#tempTime").hide();
+                    }
+                } else {
                     canEdit = false;
+                    $("#tempTime").hide();
+                    if (currentUser.privilege == 1) {
+                        $("#tempEditGroup").show();
+                        $("#tempEditCtrl").show();
+                        $("#tempEditUnit").removeAttr("readonly");
+                        $("#tempEditUnit").select2("destroy");
+                        $("#tempEditUnit").select2({
+                            width: 80
+                        });
+                        $("#tempEditUnit").select2("val", 0);
+                        $("#tempEditBtn").off("click");
+                        $("#tempEditBtn").on("click", function() {
+                            var time = parseInt($("#tempEditTime").val());
+                            if (isNaN(time)) {
+                                $.scojs_message('时长必须为整数！', $.scojs_message.TYPE_ERROR);
+                                return;
+                            }
+                            var path = gui.App.manifest.server + gui.App.manifest.app + "/api/update_temp_edit";
+                            $.post(path, {
+                                tid: editingTable.id,
+                                len: time * parseInt($("#tempEditUnit").select2("val"))
+                            }, function(data) {
+                                if (data.success) {
+                                    $.scojs_message('设置成功！', $.scojs_message.TYPE_OK);
+                                } else {
+                                    $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+                                }
+                            });
+                        });
+                    }
                 }
-                if(data && data.keys){
+                if (data && data.keys) {
                     var rows = data.keys;
                     editingTable = data;
-                    return {"rows": rows};
+                    return {
+                        "rows": rows
+                    };
                 }
                 return res;
             },
@@ -259,10 +331,10 @@ function onEditTableModalShow() {
                 halign: "center",
                 align: "center",
                 valign: "middle",
-                formatter: function(value, row, index){
-                    if(row.key_template){
+                formatter: function(value, row, index) {
+                    if (row.key_template) {
                         var str = '<div class="control-group"><label class="control-label" for="input01">' + row.key_template.key_name + '</label></div>';
-                        if(row.key_template.remark && row.key_template.remark != ""){
+                        if (row.key_template.remark && row.key_template.remark != "") {
                             str += '<p class="help-block" style="font-size:12px;">' + row.key_template.remark + '</p>';
                         }
                         return str;
@@ -276,16 +348,16 @@ function onEditTableModalShow() {
                 align: "center",
                 valign: "middle",
                 formatter: function(value, row, index) {
-                    if(!isPreview){
-                        if(!row.data_source || !row.data_source.length){
-                            if(currentUser.privilege == 1 || canEdit){
+                    if (!isPreview) {
+                        if (!row.data_source || !row.data_source.length) {
+                            if (currentUser.privilege == 1 || canEdit) {
                                 return '<div class="form-group" style="margin:0px;"><input type="text" class="value-cell form-control" value-type="' + row.value_type + '" key-id="' + row.id + '" value="' + (row.value ? row.value.value : "") + '"></div>';
                             }
-                        }else{
-                            return '<a class="source ml10" href="javascript:void(0)" title="获取数据源数据"><i class="glyphicon glyphicon-folder-open"></i></a>';
+                        } else {
+                            return '<a class="source ml10" href="javascript:void(0)" title="获取数据源数据" kid="' + row.id + '"><i class="glyphicon glyphicon-folder-open"></i></a>';
                         }
-                    }else if(row.data_source && row.data_source.length){
-                        return '<a class="source ml10" href="javascript:void(0)" title="获取数据源数据"><i class="glyphicon glyphicon-folder-open"></i></a>';
+                    } else if (row.data_source && row.data_source.length) {
+                        return '<a class="source ml10" href="javascript:void(0)" title="获取数据源数据" kid="' + row.id + '"><i class="glyphicon glyphicon-folder-open"></i></a>';
                     }
                     return row.value ? row.value.value : "";
                 },
@@ -296,8 +368,8 @@ function onEditTableModalShow() {
                 halign: "center",
                 align: "center",
                 valign: "middle",
-                formatter: function(value, row, index){
-                    if(row.value_type == 0){
+                formatter: function(value, row, index) {
+                    if (row.value_type == 0) {
                         return "数字";
                     }
                     return "字符";
@@ -308,17 +380,17 @@ function onEditTableModalShow() {
                 halign: "center",
                 align: "center",
                 valign: "middle",
-                formatter: function(value, row, index){
-                    if(!isPreview){
-                        if(canEdit || currentUser.privilege == 1){
-                            if(row.value){
+                formatter: function(value, row, index) {
+                    if (!isPreview) {
+                        if (canEdit || currentUser.privilege == 1) {
+                            if (row.value) {
                                 return '<input type="text" class="remark-cell form-control" key-id="' + row.id + '" value="' + (row.value.remark ? row.value.remark : "") + '">';
-                            }else{
+                            } else {
                                 return '<input type="text" class="remark-cell form-control" key-id="' + row.id + '" value="">';
                             }
                         }
                     }
-                    if(row.value){
+                    if (row.value) {
                         return row.value ? row.value.remark : "";
                     }
                     return "无";
@@ -326,13 +398,17 @@ function onEditTableModalShow() {
             }]
         });
         $("#updateTableBtn").off("click");
-        $("#updateTableBtn").on("click", function(){
-            showConfirm("一旦提交数据，将无法再次修改，是否确认提交？", submitData);
+        $("#updateTableBtn").on("click", function() {
+            if (currentUser.privilege != 1) {
+                showConfirm("一旦提交数据，将无法再次修改，是否确认提交？", submitData);
+            } else {
+                submitData();
+            }
         });
     }
 }
 
-function submitData(){
+function submitData() {
     ladda = Ladda.create($("#updateTableBtn")[0]);
     ladda.start();
 
@@ -342,58 +418,63 @@ function submitData(){
     var arr = {};
     var valid = true;
     var validArr = [];
-    valueCells.forEach(function(valueCell){
+    valueCells.forEach(function(valueCell) {
         var cell = $(valueCell);
         arr[cell.attr("key-id")] = {};
-        if(cell.hasClass("has-error")){
+        if (cell.hasClass("has-error")) {
             cell.removeClass("has-error");
         }
         var valueType = cell.attr("value-type");
         var cellVal = cell.val();
-        if(valueType == 0){
-            cellVal = parseFloat(cellVal);
-            if(isNaN(cellVal)){
+        if (valueType == 0) {
+            var pattern = /^-?\d+\.?\d{0,}$/;
+            if (!pattern.test(cellVal)) {
                 valid = false;
                 validArr.push(cell);
-            }else{
+            } else {
                 arr[cell.attr("key-id")]["value"] = cellVal;
             }
-        }else{
+        } else {
             arr[cell.attr("key-id")]["value"] = cellVal;
         }
     });
-    if(!valid){
+    if (!valid) {
         $.scojs_message('提交的报表中存在值与值类型不匹配项，请修改后再次提交！', $.scojs_message.TYPE_ERROR);
-        validArr.forEach(function(cell){
+        validArr.forEach(function(cell) {
             cell.parent().addClass("has-error");
         });
         ladda.stop();
         ladda = null;
         $("#editTable input").removeAttr("readonly");
         return;
-    }else{
-        remarkCells.forEach(function(remarkCell){
+    } else {
+        remarkCells.forEach(function(remarkCell) {
             var cell = $(remarkCell);
             var remarkValue = cell.val();
-            if(!arr[cell.attr("key-id")]){
+            if (!arr[cell.attr("key-id")]) {
                 arr[cell.attr("key-id")] = {};
             }
             arr[cell.attr("key-id")]["remark"] = $.trim(remarkValue);
         });
     }
-    $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/update_table_values", {values: arr, tid: editingTable.id}, function(data){
+    $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/update_table_values", {
+        values: arr,
+        tid: editingTable.id
+    }, function(data) {
         ladda.stop();
         ladda = null;
         $("#editTable input").removeAttr("readonly");
-        if(data.success){
-            if(data.updated){
+        if (data.success) {
+            if (data.updated) {
                 $.scojs_message('提交成功！', $.scojs_message.TYPE_OK);
                 $("#editTableModal").modal("hide");
-                $("#historyTable").bootstrapTable("refresh", {silent: true});
-            }else{
+                $("#historyTable").bootstrapTable("refresh", {
+                    silent: true
+                });
+            } else {
                 $.scojs_message('提交失败，请稍候再试！', $.scojs_message.TYPE_ERROR);
             }
-        }else{
+        } else {
             $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
         }
     });
@@ -401,6 +482,7 @@ function submitData(){
 
 function onEditTableModalHide() {
     editingTable = null;
+    $("#tempEditGroup").hide();
     onModalHide();
 }
 
@@ -507,7 +589,6 @@ function onKeysModalShow() {
                                 id: changingData.id
                             };
                             $.post(path, param, function(data) {
-                                console.log(data);
                                 if (data.success && data.deleted) {
                                     $('#keysTable').bootstrapTable("refresh", {
                                         slient: true
@@ -866,31 +947,13 @@ function recreateUserTable() {
 
 function onAddTableModalShow() {
     canClear = true;
-    $("#typeSelect").select2({
-        width: 300
-    });
-    $("#typeSelect").on("change", function(event) {
-        if (event.val == 2 || event.val == 3) {
-            $("#daysInput input").val("");
-            if(editingTableTemplate){
-                if(editingTableTemplate.days != 0){
-                    $("#daysInput input").val(editingTableTemplate.days);
-                }
-            }
-            $("#daysInput").show();
-        } else {
-            $("#daysInput").hide();
-            $("#daysInput input").val("");
-        }
-    });
-    $("#typeSelect").select2("val", 0);
-    $("#typeSelect").trigger("change");
 
     $("#scopeSelect").select2({
         width: 300
     });
+    $("#scopeSelect").off("change");
     $("#scopeSelect").on("change", function(event) {
-        if (event.val == 1) {
+        if ($("#scopeSelect").select2("val") == 1) {
             $("#userIds").select2("enable", true);
             $("#userIds").select2("val", "");
             $("#userIds").select2({
@@ -938,8 +1001,6 @@ function onAddTableModalShow() {
             $("#userIds").select2("destroy");
         }
     });
-    $("#scopeSelect").select2("val", 0);
-    $("#scopeSelect").trigger("change");
 
     $("#isDisabled").bootstrapSwitch({
         onText: "是",
@@ -948,39 +1009,50 @@ function onAddTableModalShow() {
 
     $("#cancelTableAdd").off("click");
     $("#cancelTableAdd").on("click", function() {
-        if ((keys || $("#tableName").val() != "") && tableId == 0) {
+        if ((keys || $("#tableName").val() != "") && tableId == 0 && !editingTableTemplate) {
             showConfirm("有数据未保存，是否确认退出?", function() {
                 $("#addTableModal").modal("hide");
+                editingTableTemplate = null;
             });
         } else {
             $("#addTableModal").modal("hide");
+            editingTableTemplate = null;
         }
     });
 
     $("#tableName").removeAttr("readonly");
-    $("#daysNum").removeAttr("readonly");
     $("#scopeSelect").select2("enable", true);
-    $("#typeSelect").select2("enable", true);
     $("#isDisabled").bootstrapSwitch("readonly", false);
     $("#tableName").val("");
-    $("#daysNum").val("");
     $("#scopeSelect").select2("val", 0);
+    $("#scopeSelect").trigger("change");
     $("#isDisabled").bootstrapSwitch("state", true);
-    if(editingTableTemplate){
-        if(editingTableTemplate.disabled == 1){
+    if (editingTableTemplate) {
+        if (editingTableTemplate.disabled == 1) {
             $("#isDisabled").bootstrapSwitch("state", false);
         }
         $("#scopeSelect").select2("val", editingTableTemplate.scope);
-        $("#typeSelect").select2("val", editingTableTemplate.type);
-        if(editingTableTemplate.days != 0){
-            $("#daysNum").val(editingTableTemplate.days);
+        $("#scopeSelect").trigger("change");
+        var arr = [];
+        editingTableTemplate.table_scope.forEach(function(ts) {
+            if (ts.user) {
+                arr.push(ts.user);
+            }
+        });
+        $("#userIds").select2("data", arr);
+        if (arr.length) {
+            $("#userIds").select2("enable", true);
         }
         $("#tableName").val(editingTableTemplate.table_name);
     }
 
+    $("#addTableBtn span").text("添加报表");
+    if (editingTableTemplate) {
+        $("#addTableBtn span").text("修改报表");
+    }
     $("#addTableBtn").off("click");
     $("#addTableBtn").on("click", function() {
-        if (!keys || !keys.length) {
+        if ((!keys || !keys.length) && !editingTableTemplate) {
             $.scojs_message('该报表未添加任何字段，无法保存!', $.scojs_message.TYPE_ERROR);
             return;
         }
@@ -998,12 +1070,6 @@ function onAddTableModalShow() {
         } else if (scopeSelect == 0) {
             ids = [];
         }
-        var typeSelect = $("#typeSelect").select2("val");
-        var daysNum = $("#daysNum").val();
-        if (!typeSelect && typeSelect != 0 && typeSelect != 1 && daysNum == "") {
-            $.scojs_message('请输入距离月初或月底的天数!', $.scojs_message.TYPE_ERROR);
-            return;
-        }
         var enabled = $("#isDisabled").bootstrapSwitch("state");
         var disabled = 0;
         if (enabled) {
@@ -1016,44 +1082,49 @@ function onAddTableModalShow() {
         ladda.start();
 
         $("#tableName").attr("readonly", "readonly");
-        $("#daysNum").attr("readonly", "readonly");
         $("#scopeSelect").select2("enable", false);
         $("#userIds").select2("enable", false);
-        $("#typeSelect").select2("enable", false);
         $("#isDisabled").bootstrapSwitch("readonly", true);
 
         var params = {
             disabled: disabled,
-            daysNum: daysNum,
+            daysNum: 0,
             ids: ids,
             tn: tableName,
-            type: typeSelect,
+            type: 0,
             scope: scopeSelect,
             keys: keys
         }
-        $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/create_table_template", params, function(data) {
+        var path = gui.App.manifest.server + gui.App.manifest.app + "/api/create_table_template";
+        if (editingTableTemplate) {
+            path = gui.App.manifest.server + gui.App.manifest.app + "/api/update_table_template";
+            params.tid = editingTableTemplate.id;
+        }
+        $.post(path, params, function(data) {
             ladda.stop();
             ladda = null;
             if (data.success) {
                 if (data.added) {
                     $.scojs_message('添加报表成功!', $.scojs_message.TYPE_OK);
                     $("#addTableModal").modal("hide");
+                } else if (data.updated) {
+                    $.scojs_message('更新报表成功!', $.scojs_message.TYPE_OK);
+                    $("#addTableModal").modal("hide");
+                    $("#tablesTable").bootstrapTable("refresh", {
+                        silent: true
+                    });
                 } else {
                     $.scojs_message('添加报表失败，请稍候重试!', $.scojs_message.TYPE_ERROR);
                     $("#tableName").removeAttr("readonly");
-                    $("#daysNum").removeAttr("readonly");
                     $("#scopeSelect").select2("enable", true);
                     $("#userIds").select2("enable", true);
-                    $("#typeSelect").select2("enable", true);
                     $("#isDisabled").bootstrapSwitch("readonly", false);
                 }
             } else {
                 $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
                 $("#tableName").removeAttr("readonly");
-                $("#daysNum").removeAttr("readonly");
                 $("#scopeSelect").select2("enable", true);
                 $("#userIds").select2("enable", true);
-                $("#typeSelect").select2("enable", true);
                 $("#isDisabled").bootstrapSwitch("readonly", false);
             }
         });
@@ -1062,6 +1133,10 @@ function onAddTableModalShow() {
 
 function onAddKeyModalHide() {
     tempTags = [];
+    if (editingTableTemplate) {
+        keys = null;
+    }
+    editingKey = null;
     $("#addTableModal").modal("show");
 }
 
@@ -1177,15 +1252,19 @@ function onTablesModalShow() {
         "click .remove": function(e, value, row, index) {
             tempId = row.id;
             showConfirm("是否确认删除该报表模板？", function() {
-                $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/delete_table_template", {tid: tempId}, function(data){
-                    if(data.success){
-                        if(data.deleted){
+                $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/delete_table_template", {
+                    tid: tempId
+                }, function(data) {
+                    if (data.success) {
+                        if (data.deleted) {
                             $.scojs_message('删除成功!', $.scojs_message.TYPE_OK);
-                            $('#tablesTable').bootstrapTable("refresh", {silent: true});
-                        }else{
+                            $('#tablesTable').bootstrapTable("refresh", {
+                                silent: true
+                            });
+                        } else {
                             $.scojs_message('删除失败，请稍候再试！!', $.scojs_message.TYPE_ERROR);
                         }
-                    }else{
+                    } else {
                         $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
                     }
                 });
@@ -1242,34 +1321,6 @@ function onTablesModalShow() {
                 return "指定财务";
             }
         }, {
-            field: 'type',
-            title: '报表类型',
-            halign: "center",
-            align: "center",
-            valign: "middle",
-            formatter: function(value, row, index) {
-                switch (value) {
-                    case 0:
-                        return "无";
-                        break;
-                    case 1:
-                        return "每天";
-                        break;
-                    case 2:
-                        return "月底";
-                        break;
-                    case 3:
-                        return "月初";
-                        break;
-                }
-            }
-        }, {
-            field: 'days',
-            title: '天数(天)',
-            halign: "center",
-            align: "center",
-            valign: "middle"
-        }, {
             field: 'disabled',
             title: '是否可用',
             halign: "center",
@@ -1313,9 +1364,9 @@ function onTablesModalShow() {
     });
 }
 
-function onAddKeyModalShow() {
+function onAddKeyModalShow(isreset) {
     canClear = false;
-    $("#addTableModal").modal("hide");
+    if (!isreset) $("#addTableModal").modal("hide");
     $("#selectKey").select2("destroy");
     $("#selectKey").select2({
         width: 300,
@@ -1355,8 +1406,12 @@ function onAddKeyModalShow() {
         },
         formatAjaxError: function(jqXHR, textStatus, errorThrown) {
             return "status:" + textStatus + " error:" + errorThrown;
-        }
+        },
+        initSelection: function(element, callback) {
+            callback(element);
+        },
     });
+    $("#selectValueType").select2("val", "");
     $("#selectValueType").select2("destroy");
     $("#selectValueType").select2({
         width: 300
@@ -1485,31 +1540,53 @@ function onAddKeyModalShow() {
         });
     });
 
-    if(editingTableTemplate){
+    if (editingTableTemplate) {
         tableId = editingTableTemplate.id;
     }
+
+    editingKey = null;
     window.templateKeyControllEvent = {
         "click .edit": function(e, value, row, index) {
-            
+            editingKey = row;
+            $("#keyAddBtn span").text("修改字段");
+            $("#selectKey").select2("data", editingKey.key_template);
+            $("#selectValueType").select2("val", editingKey.value_type);
+            if (editingKey.data_source && editingKey.data_source.length) {
+                $("#selectSourceTable").select2("data", editingKey.data_source[0].table_template);
+                $("#selectSourceTable").trigger("select2-selecting");
+
+                tempTags = [];
+                editingKey.data_source.forEach(function(source) {
+                    tempTags.push(source.source_key);
+                });
+                $("#selectSourceKey").select2("data", tempTags);
+                $("#addKeyRemark").val(editingKey.remark);
+            }
         },
         "click .remove": function(e, value, row, index) {
             tempId = row.id;
-            showConfirm("是否确定删除此字段？", function(){
-                $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/delete_key", {id: tempId}, function(data){
-                    if(data.success){
-                        if(data.deleted){
+            showConfirm("是否确定删除此字段？", function() {
+                $.post(gui.App.manifest.server + gui.App.manifest.app + "/api/delete_key", {
+                    id: tempId
+                }, function(data) {
+                    if (data.success) {
+                        if (data.deleted) {
                             $.scojs_message('删除成功!', $.scojs_message.TYPE_OK);
-                            $('#addKeyTable').bootstrapTable("refresh", {silent: true});
-                        }else{
+                            $('#addKeyTable').bootstrapTable("refresh", {
+                                silent: true
+                            });
+                        } else {
                             $.scojs_message('删除失败，请稍候再试！!', $.scojs_message.TYPE_ERROR);
                         }
-                    }else{
+                    } else {
                         $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
                     }
                 });
             });
         }
     }
+
+    $('#addKeyTable').bootstrapTable("destroy");
     $('#addKeyTable').bootstrapTable({
         method: "get",
         url: gui.App.manifest.server + gui.App.manifest.app + "/api/keys_by_tid?tid=" + tableId,
@@ -1571,7 +1648,11 @@ function onAddKeyModalShow() {
             valign: "middle",
             formatter: function(value, row, index) {
                 if (row.data_source && row.data_source.length) {
-                    return row.data_source[0].source_key.table_template.table_name;
+                    var strs = [];
+                    row.data_source.forEach(function(source) {
+                        strs.push(source.source_key.table_template.table_name);
+                    });
+                    return strs.join(", ");
                 }
             }
         }, {
@@ -1582,7 +1663,11 @@ function onAddKeyModalShow() {
             valign: "middle",
             formatter: function(value, row, index) {
                 if (row.data_source && row.data_source.length) {
-                    return row.data_source[0].source_key.key_template.key_name;
+                    var strs = [];
+                    row.data_source.forEach(function(source) {
+                        strs.push(source.source_key.key_template.key_name);
+                    });
+                    return strs.join(", ");
                 }
             }
         }, {
@@ -1610,7 +1695,40 @@ function onAddKeyModalShow() {
             events: templateKeyControllEvent
         }]
     });
-            
+
+    $("#keyAddBtn span").text("添加字段");
+    $("#resetKeyAddBtn").off("click");
+    $("#resetKeyAddBtn").on("click", function() {
+        onAddKeyModalShow(true);
+    });
+
+    if (editingTableTemplate) {
+        keys = [];
+        if (editingTableTemplate.key && editingTableTemplate.key.length) {
+            editingTableTemplate.key.forEach(function(key) {
+                var obj = {};
+                obj.key_template_id = key.key_template_id;
+                obj.table_template_id = key.table_template_id;
+                obj.remark = key.remark;
+                obj.value_type = key.value_type;
+                obj.key_id = key.id;
+                obj.source = [];
+                if (key.data_source && key.data_source.length) {
+                    var arr = [];
+                    key.data_source.forEach(function(s) {
+                        arr.push({
+                            source_table_template_id: s.source_table_template_id,
+                            source_key_id: s.source_key_id
+                        });
+                    });
+                    obj.source = arr;
+                }
+                keys.push(obj);
+            });
+        }
+    }
+
+    $("#addKeyRemark").val("");
     $("#keyAddBtn").off("click");
     $("#keyAddBtn").on("click", function() {
         var selectKey = $("#selectKey").select2("val");
@@ -1653,21 +1771,74 @@ function onAddKeyModalShow() {
             }
         }
         obj.source = source;
-        obj.remark = $("#addKeyRemark").val();
+        obj.remark = $.trim($("#addKeyRemark").val());
+        if (editingKey) {
+            obj.key_id = editingKey.id;
+        }
         if (existInKeys(obj)) {
             $.scojs_message('已有完全相同的字段存在!', $.scojs_message.TYPE_ERROR);
             return;
         }
-        if (!keys) {
-            keys = [];
+
+        var path = gui.App.manifest.server + gui.App.manifest.app + "/api/update_key";
+        if (editingKey) { // update
+            $.post(path, {
+                key_id: editingKey.id,
+                kti: selectKey,
+                vt: selectedType,
+                remark: obj.remark,
+                ids: source
+            }, function(data) {
+                if (data.success) {
+                    if (data.updated) {
+                        $.scojs_message('更新成功!', $.scojs_message.TYPE_OK);
+                        $('#addKeyTable').bootstrapTable("refresh", {
+                            silent: true
+                        });
+                        onAddKeyModalShow(true);
+                    } else {
+                        $.scojs_message('更新失败，请稍候重试！!', $.scojs_message.TYPE_ERROR);
+                    }
+                } else {
+                    $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+                }
+            });
+        } else {
+            if (editingTableTemplate) { // add key to exsiting table template
+                $.post(path, {
+                    kti: selectKey,
+                    tti: editingTableTemplate.id,
+                    vt: selectedType,
+                    remark: obj.remark,
+                    ids: source
+                }, function(data) {
+                    if (data.success) {
+                        if (data.updated) {
+                            $.scojs_message('添加成功!', $.scojs_message.TYPE_OK);
+                            $('#resetAddKey').bootstrapTable("refresh", {
+                                silent: true
+                            });
+                            onAddKeyModalShow(true);
+                        } else {
+                            $.scojs_message('添加失败，请稍候重试！!', $.scojs_message.TYPE_ERROR);
+                        }
+                    } else {
+                        $.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+                    }
+                });
+            } else {
+                if (!keys) {
+                    keys = [];
+                }
+                keys.push(obj);
+                tempTags = [];
+                $("#selectKey").select2("val", "");
+                $("#selectValueType").select2("val", "0");
+                $("#selectSourceTable").select2("val", "");
+                $("#selectSourceKey").select2("val", "");
+                $("#addKeyRemark").val("");
+            }
         }
-        keys.push(obj);
-        tempTags = [];
-        $("#selectKey").select2("val", "");
-        $("#selectValueType").select2("val", "0");
-        $("#selectSourceTable").select2("val", "");
-        $("#selectSourceKey").select2("val", "");
-        $("#addKeyRemark").val("");
     });
 }
 
@@ -1677,6 +1848,10 @@ function existInKeys(obj) {
         keys.forEach(function(key) {
             if (key.source_table_template_id == obj.source_table_template_id && key.source_key_id == obj.source_key_id && obj.key_template_id == key.key_template_id && obj.value_type == key.value_type) {
                 if (obj.source.length == key.source.length) {
+                    if (obj.key_id && key.key_id && obj.key_id == key.key_id && editingKey) {
+                        bool = false;
+                        return true;
+                    }
                     var len = obj.source.length;
                     for (var i = 0; i < len; i++) {
                         if (obj.source[i].id != key.source[i].id) {
@@ -1684,9 +1859,12 @@ function existInKeys(obj) {
                             return true;
                         }
                     }
-                    bool = true;
+                } else {
+                    bool = false;
                     return true;
                 }
+                bool = true;
+                return true;
             }
         });
     }

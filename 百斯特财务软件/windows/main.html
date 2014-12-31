@@ -15,6 +15,10 @@
 <link href="../css/sco/sco.message.css" media="all" rel="stylesheet" />
 <link href="../css/app.css" media="all" rel="stylesheet" />
 
+<style type="text/css">
+.adminOnly{display:none;}
+</style>
+
 <body>
     <nav class="navbar navbar-default navbar-static-top" role="navigation">
         <div class="container-fluid">
@@ -32,26 +36,26 @@
                             </li>
                             <li class="divider"></li>
                             <li><a href="#" id="logoutBtn">注 销</a>
-                            <li><a href="#" id="exitBtn">退 出</a>
-                            </li>
+                                <li><a href="#" id="exitBtn">退 出</a>
+                                </li>
                         </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">设置 <span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu">
-                            <li><a href="#" id="addKeyTemplate" data-toggle="modal" data-target="#keysModal">所有字段</a>
-                            </li>
-                            <li><a href="#" id="allTableTemplate" data-toggle="modal" data-target="#tablesModal">查看报表模板</a>
-                            </li>
-                            <li><a href="#" id="addTableTemplate" data-toggle="modal" data-target="#addTableModal">添加/修改报表模板</a>
-                            </li>
-                            <li><a href="#" id="addUser" data-toggle="modal" data-target="#usersModal">所有财务人员</a>
-                            </li>
-                            <li class="divider"></li>
-                            <li><a href="#" id="changePassword" data-toggle="modal" data-target="#changePasswordModal">修改资料</a>
-                            </li>
-                        </ul>
-                    </li>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">设置 <span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li class="adminOnly"><a href="#" id="addKeyTemplate" data-toggle="modal" data-target="#keysModal">所有字段</a>
+                                </li>
+                                <li class="adminOnly"><a href="#" id="allTableTemplate" data-toggle="modal" data-target="#tablesModal">查看报表模板</a>
+                                </li>
+                                <li class="adminOnly"><a href="#" id="addTableTemplate" data-toggle="modal" data-target="#addTableModal">添加/修改报表模板</a>
+                                </li>
+                                <li class="adminOnly"><a href="#" id="addUser" data-toggle="modal" data-target="#usersModal">所有财务人员</a>
+                                </li>
+                                <li class="divider" class="adminOnly"></li>
+                                <li><a href="#" id="changePassword" data-toggle="modal" data-target="#changePasswordModal">修改资料</a>
+                                </li>
+                            </ul>
+                        </li>
                 </ul>
             </div>
         </div>
@@ -60,8 +64,8 @@
     <div class="panel panel-default">
         <div class="panel-heading clearfix" id="dragZone">
             <h2 class="panel-title system-font pull-left">
-				所有报表
-			</h2>
+                所有报表
+            </h2>
         </div>
         <div class="panel-body">
             <table id="historyTable">
@@ -90,8 +94,8 @@
                     <div class="panel panel-default">
                         <div class="panel-heading clearfix" id="dragZone">
                             <h2 class="panel-title system-font pull-left">
-							添加/修改字段
-						</h2>
+                            添加/修改字段
+                        </h2>
                         </div>
                         <div class="panel-body">
                             <div role="form">
@@ -140,8 +144,8 @@
                     <div class="panel panel-default">
                         <div class="panel-heading clearfix" id="dragZone">
                             <h2 class="panel-title system-font pull-left">
-							添加财务人员
-						</h2>
+                            添加财务人员
+                        </h2>
                         </div>
                         <div class="panel-body">
                             <div role="form">
@@ -172,7 +176,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                	<button type="button" class="btn btn-danger" id="resetUserBtn">重 置</button>
+                    <button type="button" class="btn btn-danger" id="resetUserBtn">重 置</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">关 闭</button>
                 </div>
             </div>
@@ -215,8 +219,8 @@
                                 <span class="input-group-addon">报表名称</span>
                                 <input type="text" class="form-control" id="tableName" placeholder="请输入报表名称">
                                 <span class="input-group-btn">
-									<button class="btn btn-default btn-lg" type="button" data-toggle="modal" data-target="#addKeyModal">添加/修改报表字段</button>
-								</span>
+                                    <button class="btn btn-default btn-lg" type="button" data-toggle="modal" data-target="#addKeyModal">添加/修改报表字段</button>
+                                </span>
                             </div>
                         </div>
                         <div class="form-group form-group-lg">
@@ -235,25 +239,6 @@
                         </div>
                         <div class="form-group form-group-lg">
                             <div class="input-group">
-                                <span class="input-group-addon">生成类型</span>
-                                <div class="btn-group">
-                                    <select id="typeSelect">
-                                        <option value="0">无</option>
-                                        <option value="1">每天</option>
-                                        <option value="2">月初</option>
-                                        <option value="3">月底</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group form-group-lg" id="daysInput">
-                            <div class="input-group">
-                                <span class="input-group-addon">天数（天）</span>
-                                <input type="text" class="form-control" id="daysNum" placeholder="请输入天数">
-                            </div>
-                        </div>
-                        <div class="form-group form-group-lg">
-                            <div class="input-group">
                                 <span class="input-group-addon">是否可用</span>
                                 <div class="btn-group">
                                     <input type="checkbox" checked id="isDisabled" />
@@ -263,8 +248,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                	<button type="button" class="btn btn-default" id="cancelTableAdd">取 消</button>
-                    <button type="button" class="btn btn-primary system-font btn-lg ladda-button" id="addTableBtn" data-style="expand-right"><span class="ladda-label">添加报表</span></button>
+                    <button type="button" class="btn btn-default" id="cancelTableAdd">取 消</button>
+                    <button type="button" class="btn btn-primary system-font btn-lg ladda-button" id="addTableBtn" data-style="expand-right"><span class="ladda-label">添加报表</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -275,7 +261,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">添加报表字段</h4>
+                    <h4 class="modal-title">添加/修改报表字段</h4>
                 </div>
                 <div class="modal-body">
                     <table id="addKeyTable">
@@ -321,13 +307,15 @@
                                     </div>
                                 </div>
                                 <div class="form-group form-group-lg">
-                                    <button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="keyAddBtn" data-style="expand-right"><span class="ladda-label">添加字段</span></button>
+                                    <button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="keyAddBtn" data-style="expand-right"><span class="ladda-label">添加字段</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="resetKeyAddBtn">重 置</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">返 回</button>
                 </div>
             </div>
@@ -364,7 +352,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                	<button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="modifyBtn" data-style="expand-right"><span class="ladda-label">确认修改</span>
+                    <button type="button" class="btn btn-primary system-font btn-block btn-lg ladda-button" id="modifyBtn" data-style="expand-right"><span class="ladda-label">确认修改</span>
                 </div>
             </div>
         </div>
@@ -386,7 +374,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary system-font btn-lg ladda-button" id="createTableBtn" data-style="expand-right"><span class="ladda-label">创 建</span></button>
+                    <button type="button" class="btn btn-primary system-font btn-lg ladda-button" id="createTableBtn" data-style="expand-right"><span class="ladda-label">创 建</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -408,8 +397,22 @@
                     </table>
                 </div>
                 <div class="modal-footer">
+                    <div class="input-group col-lg-4 pull-left" style="display:none;" id="tempEditGroup">
+                        <span class="input-group-addon">临时修改时长</span>
+                        <input type="text" class="form-control" placeholder="时长" aria-describedby="tempEditTime" id="tempEditTime">
+                    </div>
+                    <div class="btn-group pull-left" role="group" id="tempEditCtrl" style="display:none;">
+                        <select id="tempEditUnit">
+                            <option value="60">分钟</option>
+                            <option value="3600">小时</option>
+                            <option value="86400">天</option>
+                        </select>
+                        <button type="button" class="btn btn-default pull-right" id="tempEditBtn">确 定</button>
+                    </div>
+                    <span class="label label-danger pull-left" id="tempTime" style="display:none;font-size:14px;"></span>
                     <button type="button" class="btn btn-default" data-dismiss="modal">关 闭</button>
-                    <button type="button" class="btn btn-primary system-font btn-lg ladda-button" id="updateTableBtn" data-style="expand-right"><span class="ladda-label">提 交</span></button>
+                    <button type="button" class="btn btn-primary system-font btn-lg ladda-button" id="updateTableBtn" data-style="expand-right"><span class="ladda-label">提 交</span>
+                    </button>
                 </div>
             </div>
         </div>
